@@ -9,7 +9,7 @@ import { useWallet } from '../hooks/useWallet';
 import { createPublicClient, http, formatEther } from 'viem';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { polygon } from 'wagmi/chains';
-import { retryWithBackoff, batchWithRateLimit, delay, isRateLimitError } from '../utils/rpc-helpers';
+
 // import { bscTestnet } from 'wagmi/chains';
 
 // Import contract data from useWallet
@@ -3057,127 +3057,44 @@ function TopRankedTicketsSection({ currentRound }: { currentRound: number }) {
 
       setLoading(true);
       try {
-        // Reduce from 100 to 30 tickets to check to minimize RPC calls
-        const maxTicketsToCheck = 30;
+        console.log(`🔄 Fetching top 5 ranks for round ${currentRound} via API...`);
         
-        // Smaller batch size and longer delays to prevent rate limiting
-        const batchSize = 5;
-        const allTicketRanks: { ticketNumber: number; rank: number }[] = [];
-        
-        // Use the utility function for batch processing with rate limiting
-        const ticketNumbers = Array.from({ length: maxTicketsToCheck }, (_, i) => i + 1);
-        
-        const ticketRanks = await batchWithRateLimit(
-          ticketNumbers,
-          batchSize,
-          async (ticketNumber) => {
-            try {
-              const rank = await retryWithBackoff(() =>
-                publicClient.readContract({
-                  address: CONTRACT_ADDRESSES.LOTTERY as `0x${string}`,
-                  abi: LOTTERY_ABI,
-                  functionName: 'getTicketRank',
-                  args: [BigInt(currentRound), BigInt(ticketNumber)]
-                })
-              );
-              return { ticketNumber, rank: Number(rank) };
-            } catch (error) {
-              console.warn(`Failed to get rank for ticket ${ticketNumber}:`, error);
-              return { ticketNumber, rank: 0 };
-            }
+        // Use the new backend API
+        const response = await fetch(`/api/top-ranks?roundId=${currentRound}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
           },
-          800 // Longer delay between batches
-        );
-        
-        allTicketRanks.push(...ticketRanks);
-        
-        const rankedTickets = allTicketRanks
-          .filter(t => t.rank > 0)
-          .sort((a, b) => a.rank - b.rank)
-          .slice(0, 5);
-        
-        if (rankedTickets.length === 0) {
-          setTopTickets([]);
-          setLastFetchedRound(currentRound);
-          setCacheKey(currentCacheKey);
-          
-          // Save empty result to cache
-          try {
-            localStorage.setItem(currentCacheKey, JSON.stringify({
-              data: [],
-              round: currentRound,
-              timestamp: Date.now()
-            }));
-          } catch (error) {
-            console.warn('Error saving to cache:', error);
-          }
-          return;
+        });
+
+        if (!response.ok) {
+          throw new Error(`API request failed: ${response.status} ${response.statusText}`);
         }
+
+        const result = await response.json();
         
-        // Fetch details for top 5 with improved rate limiting using utility functions
-        const detailedTickets = await batchWithRateLimit(
-          rankedTickets,
-          1, // Process one ticket at a time
-          async (ticket) => {
-            try {
-              // Sequential requests with retry logic
-              const owner = await retryWithBackoff(() =>
-                publicClient.readContract({
-                  address: CONTRACT_ADDRESSES.LOTTERY as `0x${string}`,
-                  abi: LOTTERY_ABI,
-                  functionName: 'getTicketOwner',
-                  args: [BigInt(currentRound), BigInt(ticket.ticketNumber)]
-                })
-              );
-              
-              const rawPrize = await retryWithBackoff(() =>
-                publicClient.readContract({
-                  address: CONTRACT_ADDRESSES.LOTTERY as `0x${string}`,
-                  abi: LOTTERY_ABI,
-                  functionName: 'calculateTicketPrize',
-                  args: [BigInt(currentRound), BigInt(ticket.ticketNumber)]
-                })
-              );
-              
-              // Type guard for rawPrize
-              let safePrize: string | number | bigint = 0n;
-              if (typeof rawPrize === 'bigint' || typeof rawPrize === 'number' || typeof rawPrize === 'string') {
-                safePrize = rawPrize;
-              }
-              
-              return {
-                ticketNumber: ticket.ticketNumber,
-                rank: ticket.rank,
-                owner,
-                prize: formatEther(BigInt(safePrize))
-              };
-            } catch (error) {
-              // Handle "Draw not executed yet" error gracefully
-              if (error && typeof error === 'object' && 'message' in error) {
-                const errorMessage = (error as any).message;
-                if (errorMessage.includes('Draw not executed yet')) {
-                  console.warn(`Draw not executed yet for ticket ${ticket.ticketNumber}`);
-                  return null; // Skip this ticket
-                }
-              }
-              console.warn(`Error fetching details for ticket ${ticket.ticketNumber}:`, error);
-              return null; // Skip this ticket
-            }
-          },
-          500 // Delay between tickets
-        );
+        if (!result.success) {
+          throw new Error(result.error || 'API returned error');
+        }
+
+        console.log(`✅ API returned ${result.data.length} tickets:`, result.data);
         
-        // Filter out null results
-        const validDetailedTickets = detailedTickets.filter(ticket => ticket !== null);
-        
-        setTopTickets(validDetailedTickets);
+        // Transform the data to match the expected format
+        const transformedTickets = result.data.map((ticket: any) => ({
+          ticketNumber: ticket.ticketNumber,
+          rank: ticket.rank,
+          owner: ticket.owner,
+          prize: ticket.prize
+        }));
+
+        setTopTickets(transformedTickets);
         setLastFetchedRound(currentRound);
         setCacheKey(currentCacheKey);
         
         // Save to localStorage cache
         try {
           localStorage.setItem(currentCacheKey, JSON.stringify({
-            data: validDetailedTickets,
+            data: transformedTickets,
             round: currentRound,
             timestamp: Date.now()
           }));
@@ -3203,9 +3120,19 @@ function TopRankedTicketsSection({ currentRound }: { currentRound: number }) {
   if (!topTickets.length) {
     return <div className="text-center text-gray-400 py-4">No ranked tickets found.</div>;
   }
-
-  const top3 = topTickets.slice(0, 3);
-  const next2 = topTickets.slice(3, 5);
+  
+  // Ensure we only show exactly 5 tickets with ranks 1-5
+  const validTopTickets = topTickets
+    .filter(ticket => ticket.rank >= 1 && ticket.rank <= 5)
+    .sort((a, b) => a.rank - b.rank)
+    .slice(0, 5);
+  
+  if (!validTopTickets.length) {
+    return <div className="text-center text-gray-400 py-4">No top 5 ranked tickets found.</div>;
+  }
+  
+  const top3 = validTopTickets.slice(0, 3);
+  const next2 = validTopTickets.slice(3, 5);
 
   const rankColors = [
     'from-amber-700 to-yellow-400',
