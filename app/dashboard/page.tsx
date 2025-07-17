@@ -3035,11 +3035,10 @@ function TopRankedTicketsSection({ currentRound }: { currentRound: number }) {
         const cachedData = localStorage.getItem(currentCacheKey);
         if (cachedData) {
           const parsedData = JSON.parse(cachedData);
-          const cacheAge = Date.now() - parsedData.timestamp;
           
-          // Cache is valid for 5 minutes, but invalidate if round has changed
+          // Cache is valid until round changes (ranks are permanent after draw execution)
           const cacheRound = parsedData.round || 0;
-          const isCacheValid = cacheAge < 5 * 60 * 1000 && cacheRound === currentRound;
+          const isCacheValid = cacheRound === currentRound;
           
           if (isCacheValid) {
             setTopTickets(parsedData.data);
