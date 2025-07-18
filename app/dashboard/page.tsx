@@ -55,7 +55,7 @@ const Sidebar = ({
   navigateToSection: (section: string) => void;
 }) => {
   const menuItems = [
-    { id: 'how-to-play', icon: '📖', label: 'How To Play Lottery (Simplified Lottery)' },
+    { id: 'how-to-play', icon: '📖', label: 'How To Play Lottery' },
     { id: 'dashboard', icon: '🏠', label: 'Dashboard' },
     { id: 'registration', icon: '📝', label: 'Registration' },
     // { id: 'purchase', icon: '🎫', label: 'Purchase' },
@@ -227,6 +227,7 @@ const ComprehensivePrizeDisplay = React.memo(forwardRef<{ refreshData: () => voi
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showSponsorPopup, setShowSponsorPopup] = useState(false);
+  const [showDownlineInfoPopup, setShowDownlineInfoPopup] = useState(false);
   const [showDistributionPopup, setShowDistributionPopup] = useState(false);
   const [claimLoading, setClaimLoading] = useState(false);
   const [isClaimed, setIsClaimed] = useState<boolean | null>(null);
@@ -435,6 +436,15 @@ const ComprehensivePrizeDisplay = React.memo(forwardRef<{ refreshData: () => voi
         
         <div className="relative overflow-hidden bg-gradient-to-br from-purple-900/80 via-purple-800/60 to-purple-900/80 rounded-xl p-4 md:p-5 text-center border-2 border-purple-500/50 shadow-lg hover:shadow-purple-500/20 transition-all duration-500 group before:absolute before:inset-0 before:bg-gradient-to-r before:from-purple-400/20 before:via-transparent before:to-purple-400/20 before:opacity-0 before:group-hover:opacity-100 before:transition-opacity before:duration-500 before:-z-10">
           <div className="absolute top-2 right-2 text-purple-300 animate-pulse text-sm">🎁</div>
+          <div className="absolute top-2 left-2">
+            <button
+              onClick={() => setShowDownlineInfoPopup(true)}
+              className="text-white-900 hover:text-purple-100 text-sm bg-purple-800/50 hover:bg-purple-700/50 rounded-full w-6 h-6 flex items-center justify-center transition-all duration-200 hover:scale-110"
+              title="Info about Downline Income"
+            >
+              !
+            </button>
+          </div>
           <div className="text-xl md:text-2xl font-bold text-purple-300 mb-1">
             {formatUSDT(prizeData.rewardSponsorIncome || '0')}
           </div>
@@ -444,7 +454,7 @@ const ComprehensivePrizeDisplay = React.memo(forwardRef<{ refreshData: () => voi
         <div className="relative overflow-hidden bg-gradient-to-br from-blue-900/80 via-blue-800/60 to-blue-900/80 rounded-xl p-4 md:p-5 text-center border-2 border-blue-500/50 shadow-lg hover:shadow-blue-500/20 transition-all duration-500 group before:absolute before:inset-0 before:bg-gradient-to-r before:from-blue-400/20 before:via-transparent before:to-blue-400/20 before:opacity-0 before:group-hover:opacity-100 before:transition-opacity before:duration-500 before:-z-10">
           <div className="absolute top-2 right-2 text-blue-300 animate-pulse text-sm">🏆</div>
           <div className="text-xl md:text-2xl font-bold text-blue-300 mb-1">
-            {formatUSDT(prizeData.netPrize || '0')}
+            {isClaimed === true ? formatUSDT('0') : formatUSDT(prizeData.netPrize || '0')}
           </div>
           <div className="text-xs md:text-sm text-blue-200">Winning Prize</div>
         </div>
@@ -567,6 +577,34 @@ const ComprehensivePrizeDisplay = React.memo(forwardRef<{ refreshData: () => voi
                 No level data available
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Downline Income Info Popup */}
+      {showDownlineInfoPopup && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30">
+          <div className="bg-white rounded-xl p-6 mx-4 border shadow-2xl max-w-md w-full relative animate-slide-in-right">
+            <button
+              className="absolute top-3 right-3 text-gray-400 hover:text-gray-700 text-xl font-bold w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
+              onClick={() => setShowDownlineInfoPopup(false)}
+            >
+              &times;
+            </button>
+            <div className="text-center">
+              <div className="text-3xl mb-4">🎁</div>
+              <h4 className="text-lg md:text-xl font-semibold mb-4 text-purple-700">
+                Downline Income (Claim Time)
+              </h4>
+              <div className="text-sm md:text-base text-gray-700 leading-relaxed">
+                <p className="mb-3">
+                  This amount you will get when you participate in the next round and claim.
+                </p>
+                <p className="text-green-900 font-medium">
+                  💡 : This income is earned from your referral network if you claimed before all your downlines have claimed.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -2079,7 +2117,7 @@ export default function Dashboard() {
                 {/* Digital Timer Display */}
                 <div className="bg-[#0f1f4a] border-2 border-[#1C3172] rounded-xl px-4 md:p-6 shadow-lg flex flex-col items-center justify-center w-full sm:w-1/3 min-h-[140px] md:min-h-[160px]">
                   <div className="text-sm md:text-base text-yellow-800 mb-2 font-medium">Time since round creation</div>
-                  <div className="text-lg md:text-xl lg:text-2xl font-mono font-bold text-white tracking-widest bg-[#1C3172] px-3 py-1 rounded border border-[#2a4a8a]">
+                  <div className="text-sm md:text-base lg:text-lg font-mono font-bold text-white tracking-widest bg-[#1C3172] px-3 py-1 rounded border border-[#2a4a8a]">
                     {timeSince}
                   </div>
                 </div>
