@@ -37,13 +37,10 @@ yarn-error.log*
 .vercel
 
 # cache
-.cache/
+# .cache/  # Commented out to allow cache deployment to Vercel
 
 # typescript
 *.tsbuildinfo
 next-env.d.ts
 
 .vercel
-
-# cache
-.cache/
