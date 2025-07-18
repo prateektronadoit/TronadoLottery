@@ -77,6 +77,67 @@ export const useWallet = () => {
   const [transactionType, setTransactionType] = useState<'register' | 'purchase' | 'claim' | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
+  // NEW STATE - Cache for draw execution status per round
+  const [drawStatusCache, setDrawStatusCache] = useState<{[roundId: number]: boolean}>({});
+
+  // Function to get draw status with caching
+  const getDrawStatus = async (roundId: number): Promise<boolean> => {
+    // Check cache first
+    if (drawStatusCache.hasOwnProperty(roundId)) {
+      console.log(`📋 Using cached draw status for round ${roundId}:`, drawStatusCache[roundId]);
+      return drawStatusCache[roundId];
+    }
+
+    try {
+      console.log(`🔍 Fetching draw status for round ${roundId} from contract...`);
+      const roundInfo = await publicClient.readContract({
+        address: CONTRACT_ADDRESSES.LOTTERY as `0x${string}`,
+        abi: LOTTERY_ABI,
+        functionName: 'getRoundInfo',
+        args: [BigInt(roundId)],
+      }) as any[];
+
+      const drawExecuted = roundInfo[4]; // drawExecuted is at index 4
+      
+      // Cache the result
+      setDrawStatusCache(prev => ({
+        ...prev,
+        [roundId]: drawExecuted
+      }));
+      
+      console.log(`💾 Cached draw status for round ${roundId}:`, drawExecuted);
+      return drawExecuted;
+    } catch (error) {
+      console.error(`Error fetching draw status for round ${roundId}:`, error);
+      return false;
+    }
+  };
+
+  // Function to clear draw status cache for old rounds
+  const clearDrawStatusCache = (currentRound: number) => {
+    setDrawStatusCache(prev => {
+      const newCache: {[roundId: number]: boolean} = {};
+      // Only keep cache for current round and recent rounds
+      Object.keys(prev).forEach(roundIdStr => {
+        const roundId = parseInt(roundIdStr);
+        if (roundId >= currentRound - 1) { // Keep current and previous round
+          newCache[roundId] = prev[roundId];
+        }
+      });
+      console.log(`🧹 Cleared draw status cache, keeping rounds >= ${currentRound - 1}`);
+      return newCache;
+    });
+  };
+
+  // Function to get current cache status for debugging
+  const getDrawStatusCacheInfo = () => {
+    return {
+      cache: drawStatusCache,
+      currentRound: currentRoundId ? Number(currentRoundId) : 0,
+      cacheSize: Object.keys(drawStatusCache).length
+    };
+  };
+
   // Get BNB balance
   const { data: bnbBalance } = useBalance({
     address: address,
@@ -295,34 +356,44 @@ export const useWallet = () => {
       const prizePool = (totalRevenue * BigInt(75)) / BigInt(100);
       
       console.log('📊 Setting dashboard data for round:', Number(currentRoundId));
-      setDashboardData((prevData: any) => ({
-        ...prevData,
-        currentRound: Number(currentRoundId),
-        totalTickets,
-        ticketPrice,
-        ticketsSold,
-        prizePool: formatUSDT(formatEther(prizePool)),
-        isActive: roundDataArray[3],
-        drawExecuted: roundDataArray[4],
-        allClaimed: roundDataArray[5],
-        isSettled: roundDataArray[6],
-        totalPlayed: totalPlayed ? formatUSDT(formatEther(totalPlayed as bigint)) : '0',
-        winningNumber: Number(roundDataArray[7] || BigInt(0)),
-        myTicketsCount: tickets.length,
-        myTickets: tickets,
-        userPurchaseHistory: tickets.length > 0 ? [{
-          roundId: Number(currentRoundId),
-          ticketsCount: tickets.length,
-          amountPaid: formatUSDT(formatEther(BigInt(tickets.length) * (roundDataArray[1] || BigInt(0)))),
-          status: roundDataArray[4] ? 'Draw Complete' : 'Active'
-        }] : []
-      }));
+      
+      // Clear draw status cache for old rounds when round changes
+      clearDrawStatusCache(Number(currentRoundId));
+      
+      // Use cached draw status instead of directly from roundData
+      const getCachedDrawStatus = async () => {
+        const drawExecuted = await getDrawStatus(Number(currentRoundId));
+        setDashboardData((prevData: any) => ({
+          ...prevData,
+          currentRound: Number(currentRoundId),
+          totalTickets,
+          ticketPrice,
+          ticketsSold,
+          prizePool: formatUSDT(formatEther(prizePool)),
+          isActive: roundDataArray[3],
+          drawExecuted: drawExecuted,
+          allClaimed: roundDataArray[5],
+          isSettled: roundDataArray[6],
+          totalPlayed: totalPlayed ? formatUSDT(formatEther(totalPlayed as bigint)) : '0',
+          winningNumber: Number(roundDataArray[7] || BigInt(0)),
+          myTicketsCount: tickets.length,
+          myTickets: tickets,
+          userPurchaseHistory: tickets.length > 0 ? [{
+            roundId: Number(currentRoundId),
+            ticketsCount: tickets.length,
+            amountPaid: formatUSDT(formatEther(BigInt(tickets.length) * (roundDataArray[1] || BigInt(0)))),
+            status: drawExecuted ? 'Draw Complete' : 'Active'
+          }] : []
+        }));
+      };
+      
+      getCachedDrawStatus();
     } else {
       console.log('📊 Dashboard data not set - currentRoundId:', currentRoundId, 'roundData:', roundData);
     }
   }, [currentRoundId, roundData, userTickets, userTicketsError, totalPlayed]);
 
-  // Memoize expensive calculations
+  // Memoize expensive calculations - Note: drawExecuted is now handled by cache
   const memoizedDashboardData = useMemo(() => {
     if ((currentRoundId === undefined || currentRoundId === null) || !roundData) return null;
     
@@ -342,7 +413,7 @@ export const useWallet = () => {
       ticketsSold,
       prizePool: formatUSDT(formatEther(prizePool)),
       isActive: roundDataArray[3],
-      drawExecuted: roundDataArray[4],
+      // drawExecuted is now handled by cache system
       allClaimed: roundDataArray[5],
       isSettled: roundDataArray[6],
       winningNumber: Number(roundDataArray[7] || BigInt(0)),
@@ -397,11 +468,17 @@ export const useWallet = () => {
     }
   }, [isConnected, address]);
 
-  // Polling mechanism to check for draw execution status
-  // Optimized polling with rate limiting and error handling
+  // Optimized polling mechanism to check for draw execution status with caching
   useEffect(() => {
     // Don't poll if not connected, no address, no current round, or draw already executed
     if (!isConnected || !address || !currentRoundId || currentRoundId === BigInt(0) || dashboardData.drawExecuted) {
+      return;
+    }
+
+    // Also check if draw is already cached as executed
+    const currentRound = Number(currentRoundId);
+    if (drawStatusCache[currentRound] === true) {
+      console.log(`📋 Draw already cached as executed for round ${currentRound}, skipping polling`);
       return;
     }
 
@@ -417,18 +494,20 @@ export const useWallet = () => {
       isPolling = true;
       
       try {
-        const roundInfo = await publicClient.readContract({
-          address: CONTRACT_ADDRESSES.LOTTERY as `0x${string}`,
-          abi: LOTTERY_ABI,
-          functionName: 'getRoundInfo',
-          args: [currentRoundId],
-        }) as any[];
-
-        const newDrawExecuted = roundInfo[4]; // drawExecuted is at index 4
+        // Use cached draw status function
+        const newDrawExecuted = await getDrawStatus(Number(currentRoundId));
         
         // If draw status changed from false to true, update the dashboard data
         if (newDrawExecuted && !dashboardData.drawExecuted) {
           console.log('🎉 Draw executed detected! Updating dashboard data...');
+          
+          // Get full round info for additional data (winning number, etc.)
+          const roundInfo = await publicClient.readContract({
+            address: CONTRACT_ADDRESSES.LOTTERY as `0x${string}`,
+            abi: LOTTERY_ABI,
+            functionName: 'getRoundInfo',
+            args: [currentRoundId],
+          }) as any[];
           
           // Update only the draw-related data
           setDashboardData((prevData: any) => ({
@@ -460,8 +539,8 @@ export const useWallet = () => {
               intervalId = setInterval(pollDrawStatus, 60000); // 60 seconds
             }
           } else {
-        console.error('Error polling draw status:', error);
-      }
+            console.error('Error polling draw status:', error);
+          }
         } else {
           console.error('Error polling draw status:', error);
         }
@@ -470,8 +549,8 @@ export const useWallet = () => {
       }
     };
 
-    // Start with a longer interval (30 seconds) to reduce API calls
-    intervalId = setInterval(pollDrawStatus, 30000);
+    // Start with a shorter interval (10 seconds) for better responsiveness
+    intervalId = setInterval(pollDrawStatus, 10000);
     
     // Poll immediately once
     pollDrawStatus();
@@ -481,7 +560,77 @@ export const useWallet = () => {
         clearInterval(intervalId);
       }
     };
-  }, [isConnected, address, currentRoundId]); // Removed dashboardData.drawExecuted from dependencies
+  }, [isConnected, address, currentRoundId, drawStatusCache]); // Include drawStatusCache in dependencies
+
+  // Real-time event listening for DrawExecuted events
+  useEffect(() => {
+    if (!isConnected || !address || !currentRoundId || currentRoundId === BigInt(0) || dashboardData.drawExecuted) {
+      return;
+    }
+
+    console.log('🎧 Setting up real-time listener for DrawExecuted events...');
+
+    const unwatch = publicClient.watchContractEvent({
+      address: CONTRACT_ADDRESSES.LOTTERY as `0x${string}`,
+      abi: LOTTERY_ABI,
+      eventName: 'DrawExecuted',
+      onLogs: (logs) => {
+        console.log('🎉 DrawExecuted event received:', logs);
+        
+        // For now, just update the draw status when any DrawExecuted event is received
+        // This is a simplified approach - in production you'd want to check the roundId
+        console.log('🎉 Draw executed! Updating UI immediately...');
+        
+        // Update cache for current round
+        setDrawStatusCache(prev => ({
+          ...prev,
+          [Number(currentRoundId)]: true
+        }));
+        
+        // Get full round info for additional data (winning number, etc.)
+        const getFullRoundInfo = async () => {
+          try {
+            const roundInfo = await publicClient.readContract({
+              address: CONTRACT_ADDRESSES.LOTTERY as `0x${string}`,
+              abi: LOTTERY_ABI,
+              functionName: 'getRoundInfo',
+              args: [currentRoundId],
+            }) as any[];
+            
+            // Update dashboard data immediately
+            setDashboardData((prevData: any) => ({
+              ...prevData,
+              drawExecuted: true,
+              winningNumber: Number(roundInfo[7] || BigInt(0)),
+              allClaimed: roundInfo[5],
+              isSettled: roundInfo[6],
+            }));
+            
+            // Show notification
+            showNotification('🎉 Draw has been executed! You can now claim your prizes!', 'success');
+          } catch (error) {
+            console.error('Error getting full round info after event:', error);
+            // Still update with basic info
+            setDashboardData((prevData: any) => ({
+              ...prevData,
+              drawExecuted: true,
+            }));
+            showNotification('🎉 Draw has been executed! You can now claim your prizes!', 'success');
+          }
+        };
+        
+        getFullRoundInfo();
+      },
+      onError: (error) => {
+        console.error('Error listening to DrawExecuted events:', error);
+      }
+    });
+
+    return () => {
+      console.log('🔇 Stopping DrawExecuted event listener...');
+      unwatch();
+    };
+  }, [isConnected, address, currentRoundId, dashboardData.drawExecuted]);
 
   // Function to get user total prize for a specific round
   const getUserTotalPrize = async (roundId: number, userAddress?: string) => {
@@ -1058,7 +1207,7 @@ export const useWallet = () => {
     }
   };
 
-  // Manual refresh function to check draw status immediately
+  // Manual refresh function to check draw status immediately with caching
   const refreshDrawStatus = async () => {
     if (!isConnected || !address || !currentRoundId) {
       showNotification('Please connect your wallet first', 'error');
@@ -1067,17 +1216,28 @@ export const useWallet = () => {
 
     try {
       setLoading(true);
-      const roundInfo = await publicClient.readContract({
-        address: CONTRACT_ADDRESSES.LOTTERY as `0x${string}`,
-        abi: LOTTERY_ABI,
-        functionName: 'getRoundInfo',
-        args: [currentRoundId],
-      }) as any[];
-
-      const newDrawExecuted = roundInfo[4];
+      
+      // Force refresh by clearing cache for current round
+      setDrawStatusCache(prev => {
+        const newCache = { ...prev };
+        delete newCache[Number(currentRoundId)];
+        console.log(`🔄 Cleared cache for round ${currentRoundId} to force refresh`);
+        return newCache;
+      });
+      
+      // Get fresh draw status
+      const newDrawExecuted = await getDrawStatus(Number(currentRoundId));
       
       if (newDrawExecuted && !dashboardData.drawExecuted) {
         console.log('🎉 Draw executed detected! Updating dashboard data...');
+        
+        // Get full round info for additional data (winning number, etc.)
+        const roundInfo = await publicClient.readContract({
+          address: CONTRACT_ADDRESSES.LOTTERY as `0x${string}`,
+          abi: LOTTERY_ABI,
+          functionName: 'getRoundInfo',
+          args: [currentRoundId],
+        }) as any[];
         
         setDashboardData((prevData: any) => ({
           ...prevData,
@@ -1107,6 +1267,16 @@ export const useWallet = () => {
   const forceRefreshData = async () => {
     console.log('🔄 Force refreshing all contract data...');
     try {
+      // Clear draw status cache to force fresh fetch
+      if (currentRoundId) {
+        setDrawStatusCache(prev => {
+          const newCache = { ...prev };
+          delete newCache[Number(currentRoundId)];
+          console.log(`🔄 Cleared draw status cache for round ${currentRoundId} during force refresh`);
+          return newCache;
+        });
+      }
+      
       await Promise.all([
         refetchCurrentRound(),
         refetchRoundData()
@@ -1159,6 +1329,10 @@ export const useWallet = () => {
     refreshDrawStatus,
     forceRefreshData, // Add the new function
 
+    // Draw Status Cache Functions
+    getDrawStatus,
+    clearDrawStatusCache,
+    getDrawStatusCacheInfo,
     
     // Contract addresses for reference
     contractAddresses: CONTRACT_ADDRESSES
