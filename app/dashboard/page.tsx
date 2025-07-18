@@ -55,11 +55,13 @@ const Sidebar = ({
   navigateToSection: (section: string) => void;
 }) => {
   const menuItems = [
+    { id: 'how-to-play', icon: '📖', label: 'How To Play Lottery (Simplified Lottery)' },
     { id: 'dashboard', icon: '🏠', label: 'Dashboard' },
     { id: 'registration', icon: '📝', label: 'Registration' },
     // { id: 'purchase', icon: '🎫', label: 'Purchase' },
     { id: 'claim', icon: '🏆', label: 'Claim Prizes' },
     { id: 'community', icon: '👥', label: 'My Community' }, // new section
+     // new section
   ];
 
   return (
@@ -144,7 +146,7 @@ const StatCard = ({ icon, iconImage, title, value, subtitle, bgClass = "bg-opaci
               <span className="text-sm md:text-base lg:text-lg text-gray-400">Loading...</span>
             </div>
           ) : (
-            <div className="text-lg md:text-xl lg:text-2xl xl:text-3xl font-bold text-white mb-1 leading-tight">{value}</div>
+          <div className="text-lg md:text-xl lg:text-2xl xl:text-3xl font-bold text-white mb-1 leading-tight">{value}</div>
           )}
           <div className="text-xs text-gray-300 leading-tight">{subtitle}</div>
         </div>
@@ -593,19 +595,19 @@ const ConfettiCelebration = ({ onClose, winningTicketInfo }: { onClose?: () => v
     const colors = ['#FFD700', '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#FF8C00', '#FF1493'];
     const emojis = ['🎉', '🎊', '✨', '💫', '🌟', '⭐', '🎈', '🎁', '🏆', '💎'];
     
-    // Reduced number of confetti elements for better performance
-    const fallingConfetti = Array.from({ length: 20 }, (_, i) => ({
+    // Reduced number of confetti elements for better performance on mobile
+    const fallingConfetti = Array.from({ length: 15 }, (_, i) => ({
       id: `falling-${i}`,
       left: `${Math.random() * 100}%`,
       delay: `${Math.random() * 2}s`,
       duration: `${2 + Math.random() * 2}s`,
       color: colors[Math.floor(Math.random() * colors.length)],
-      fontSize: `${12 + Math.random() * 6}px`,
+      fontSize: `${10 + Math.random() * 4}px`,
       rotation: `${Math.random() * 360}deg`,
       emoji: emojis[Math.floor(Math.random() * emojis.length)]
     }));
 
-    const floatingConfetti = Array.from({ length: 12 }, (_, i) => ({
+    const floatingConfetti = Array.from({ length: 8 }, (_, i) => ({
       id: `floating-${i}`,
       left: `${Math.random() * 100}%`,
       top: `${Math.random() * 100}%`,
@@ -622,8 +624,8 @@ const ConfettiCelebration = ({ onClose, winningTicketInfo }: { onClose?: () => v
   }, []); // Empty dependency array - calculate once
 
   return (
-    <div className="relative bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 rounded-2xl p-6 md:p-8 text-center shadow-xl border-4 border-yellow-300" style={{ 
-      boxShadow: '0 0 30px rgba(255, 215, 0, 0.6), 0 0 60px rgba(255, 165, 0, 0.4), 0 0 90px rgba(255, 69, 0, 0.2)'
+    <div className="relative bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 rounded-xl md:rounded-2xl p-4 md:p-6 lg:p-8 text-center shadow-xl border-2 md:border-4 border-yellow-300 mx-2 md:mx-0" style={{ 
+      boxShadow: '0 0 20px rgba(255, 215, 0, 0.6), 0 0 40px rgba(255, 165, 0, 0.4), 0 0 60px rgba(255, 69, 0, 0.2)'
     }}>
       {/* Optimized Falling Confetti Animation */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -666,13 +668,227 @@ const ConfettiCelebration = ({ onClose, winningTicketInfo }: { onClose?: () => v
       </div>
       
       <div className="relative z-10">
-        <div className="text-4xl md:text-5xl mb-3 animate-bounce" style={{ animationDuration: '2s' }}>🎉</div>
-        <h2 className="text-xl md:text-2xl font-bold text-white mb-3 drop-shadow-lg">
+        <div className="text-3xl md:text-4xl lg:text-5xl mb-2 md:mb-3 animate-bounce" style={{ animationDuration: '2s' }}>🎉</div>
+        <h2 className="text-lg md:text-xl lg:text-2xl font-bold text-white mb-2 md:mb-3 drop-shadow-lg">
           CONGRATULATIONS!
         </h2>
-        <p className="text-lg md:text-xl text-white mb-4 font-semibold drop-shadow-md">
+        <p className="text-sm md:text-lg lg:text-xl text-white mb-3 md:mb-4 font-semibold drop-shadow-md leading-tight">
           Your ticket has won prize {winningTicketInfo?.prize ? parseFloat(winningTicketInfo.prize).toFixed(5) : '0.00000'} TRDO! 🏆
         </p>
+      </div>
+    </div>
+  );
+};
+
+// PowerPoint Viewer Component
+const PowerPointViewer = () => {
+  const [currentSlide, setCurrentSlide] = useState(1);
+  const [totalSlides, setTotalSlides] = useState(22); // Default, will be updated
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [slides, setSlides] = useState<string[]>([]);
+  const pptxUrl = '/pdf/TronadoLottery.pptx';
+
+  // Actual slides data from the slides directory
+  const actualSlides = [
+    '/slides/1.png',
+    '/slides/2.png',
+    '/slides/3.png',
+    '/slides/4.png',
+    '/slides/5.png',
+    '/slides/6.png',
+    '/slides/7.png',
+    '/slides/8.png',
+    '/slides/9.png',
+    '/slides/10.png',
+    '/slides/11.png',
+    '/slides/12.png',
+    '/slides/13.png',
+    '/slides/14.png',
+    '/slides/15.png',
+    '/slides/16.png',
+    '/slides/17.png',
+    '/slides/18.png',
+    '/slides/19.png',
+    '/slides/20.png',
+    '/slides/21.png',
+    '/slides/22.png'
+  ];
+
+  useEffect(() => {
+    // Load actual slides
+    setLoading(true);
+    setTimeout(() => {
+      setSlides(actualSlides);
+      setTotalSlides(actualSlides.length);
+      setLoading(false);
+    }, 1000);
+  }, []);
+
+  const goToPreviousSlide = () => {
+    if (currentSlide > 1) {
+      setCurrentSlide(currentSlide - 1);
+    }
+  };
+
+  const goToNextSlide = () => {
+    if (currentSlide < totalSlides) {
+      setCurrentSlide(currentSlide + 1);
+    }
+  };
+
+  const handleDownload = () => {
+    const link = document.createElement('a');
+    link.href = pptxUrl;
+    link.download = 'TronadoLottery.pptx';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleViewOnline = () => {
+    // Open in Microsoft Office Online or Google Slides
+    const encodedUrl = encodeURIComponent(window.location.origin + pptxUrl);
+    const googleSlidesUrl = `https://docs.google.com/viewer?url=${encodedUrl}&embedded=true`;
+    window.open(googleSlidesUrl, '_blank');
+  };
+
+  return (
+    <div className="max-w-4xl mx-auto space-y-4 md:space-y-6 px-2 md:px-0">
+      <div className="bg-gray-900 rounded-lg p-3 md:p-6 border border-gray-700">
+        <h2 className="text-lg md:text-2xl font-bold mb-4 md:mb-6 text-center text-white flex items-center justify-center">
+          <span className="mr-2 md:mr-3">📊</span>
+          How To Play Lottery (Simplified Lottery)
+        </h2>
+        
+        {/* PowerPoint Slides Container */}
+        <div className="relative bg-white rounded-lg shadow-lg overflow-hidden">
+          {/* Navigation Controls */}
+          <div className="absolute top-2 md:top-4 left-2 md:left-4 right-2 md:right-4 z-10 flex justify-between items-center">
+            <button
+              onClick={goToPreviousSlide}
+              disabled={currentSlide <= 1}
+              className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-2 md:px-4 py-1 md:py-2 rounded-lg transition-colors duration-200 flex items-center shadow-lg text-xs md:text-sm"
+            >
+              <svg className="w-3 h-3 md:w-5 md:h-5 mr-1 md:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              <span className="hidden sm:inline">Previous</span>
+            </button>
+            
+            <div className="bg-black bg-opacity-50 text-white px-2 md:px-3 py-1 rounded-lg text-xs md:text-sm font-medium">
+              {currentSlide}/{totalSlides}
+            </div>
+            
+            <button
+              onClick={goToNextSlide}
+              disabled={currentSlide >= totalSlides}
+              className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-2 md:px-4 py-1 md:py-2 rounded-lg transition-colors duration-200 flex items-center shadow-lg text-xs md:text-sm"
+            >
+              <span className="hidden sm:inline">Next</span>
+              <svg className="w-3 h-3 md:w-5 md:h-5 ml-1 md:ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
+
+          {/* Slides Display */}
+          <div className="w-full h-[300px] sm:h-[400px] md:h-[500px] lg:h-[600px] xl:h-[700px] relative bg-gradient-to-br from-blue-50 to-gray-100">
+            {loading ? (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-8 w-8 md:h-16 md:w-16 border-b-2 border-blue-600 mx-auto mb-2 md:mb-4"></div>
+                  <p className="text-gray-600 text-sm md:text-lg">Loading presentation...</p>
+                </div>
+              </div>
+            ) : slides.length > 0 ? (
+              <div className="w-full h-full flex items-center justify-center p-2 md:p-4">
+                <div className="relative w-full h-full flex items-center justify-center">
+                  {/* Current Slide */}
+                  <div className="max-w-full max-h-full bg-white rounded-lg shadow-xl overflow-hidden">
+                    <img
+                      src={slides[currentSlide - 1]}
+                      alt={`Slide ${currentSlide}`}
+                      className="w-full h-auto object-contain"
+                      onError={(e) => {
+                        // Fallback to placeholder if image fails to load
+                        e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAwIiBoZWlnaHQ9IjYwMCIgdmlld0JveD0iMCAwIDgwMCA2MDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI4MDAiIGhlaWdodD0iNjAwIiBmaWxsPSIjRjNGNEY2Ii8+Cjx0ZXh0IHg9IjQwMCIgeT0iMzAwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMjQiIGZpbGw9IiM2QjcyODAiIHRleHQtYW5jaG9yPSJtaWRkbGUiPk5vIHNsaWRlIGltYWdlIGF2YWlsYWJsZTwvdGV4dD4KPC9zdmc+';
+                      }}
+                    />
+                  </div>
+                  
+                  {/* Slide Navigation Dots */}
+                  <div className="absolute bottom-2 md:bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-1 md:space-x-2">
+                    {slides.map((_, index) => (
+                      <button
+                        key={index}
+                        onClick={() => setCurrentSlide(index + 1)}
+                        className={`w-2 h-2 md:w-3 md:h-3 rounded-full transition-colors duration-200 ${
+                          currentSlide === index + 1 
+                            ? 'bg-blue-600' 
+                            : 'bg-gray-300 hover:bg-gray-400'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="text-center px-4">
+                  <div className="text-4xl md:text-6xl mb-2 md:mb-4">📊</div>
+                  <h3 className="text-lg md:text-xl font-bold text-gray-800 mb-1 md:mb-2">Presentation Not Available</h3>
+                  <p className="text-sm md:text-base text-gray-600 mb-3 md:mb-4">Please use the download or online viewing options below</p>
+                  
+                  {/* Fallback Action Buttons */}
+                  <div className="flex flex-col sm:flex-row gap-2 md:gap-4 justify-center">
+                    <button
+                      onClick={handleViewOnline}
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-4 md:px-6 py-2 md:py-3 rounded-lg transition-colors duration-200 flex items-center justify-center text-sm md:text-base"
+                    >
+                      <svg className="w-4 h-4 md:w-5 md:h-5 mr-1 md:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                      </svg>
+                      View Online
+                    </button>
+                    
+                    <button
+                      onClick={handleDownload}
+                      className="bg-green-600 hover:bg-green-700 text-white px-4 md:px-6 py-2 md:py-3 rounded-lg transition-colors duration-200 flex items-center justify-center text-sm md:text-base"
+                    >
+                      <svg className="w-4 h-4 md:w-5 md:h-5 mr-1 md:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                      Download PPTX
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Instructions
+        <div className="mt-6 p-4 bg-blue-900 border border-blue-700 rounded-lg">
+          <h3 className="text-lg font-semibold text-blue-200 mb-2">📋 Instructions:</h3>
+          <ul className="text-sm text-blue-100 space-y-1">
+            <li>• <strong>Left/Right Arrows:</strong> Navigate through slides using Previous/Next buttons</li>
+            <li>• <strong>Slide Dots:</strong> Click on dots at bottom to jump to specific slides</li>
+            <li>• <strong>Download PPTX:</strong> Download the original PowerPoint file</li>
+            <li>• <strong>View Online:</strong> Open in Google Slides for full presentation mode</li>
+          </ul>
+        </div>
+
+        {/* File Information */}
+        {/* <div className="mt-4 p-4 bg-gray-800 border border-gray-600 rounded-lg">
+          <h3 className="text-lg font-semibold text-gray-200 mb-2">📁 File Information:</h3>
+          <div className="text-sm text-gray-300 space-y-1">
+            <p><strong>File Name:</strong> TronadoLottery.pptx</p>
+            <p><strong>File Type:</strong> Microsoft PowerPoint Presentation</p>
+            <p><strong>Total Slides:</strong> 22 slides</p>
+            <p><strong>Content:</strong> Complete lottery guide with slides and instructions</p>
+          </div>
+        </div> */}
       </div>
     </div>
   );
@@ -893,7 +1109,7 @@ export default function Dashboard() {
       const refId = urlParams.get('refId');
       
       // Set section from URL parameter if valid
-      if (section && ['dashboard', 'registration', 'purchase', 'mytickets', 'claim', 'rankings', 'community'].includes(section)) {
+      if (section && ['dashboard', 'registration', 'purchase', 'mytickets', 'claim', 'rankings', 'community', 'how-to-play'].includes(section)) {
         setActiveSection(section);
       }
       
@@ -1073,8 +1289,8 @@ export default function Dashboard() {
   useEffect(() => {
     const checkForWinningTickets = async () => {
       if (!isConnected || !address || !dashboardData.currentRound || dashboardData.currentRound === 0 || !dashboardData.drawExecuted || !dashboardData.myTickets || dashboardData.myTickets.length === 0) {
-        setShowConfetti(false);
-        setWinningTicketInfo(null);
+    setShowConfetti(false);
+    setWinningTicketInfo(null);
         return;
       }
 
@@ -1093,10 +1309,10 @@ export default function Dashboard() {
         // Check for winning tickets - now show confetti for any rank >= 1
         for (const result of results) {
           if (result.rank >= 1) {
-            hasWinningTicket = true;
+              hasWinningTicket = true;
             if (!bestTicket || result.rank < bestTicket.rank) {
               bestTicket = { ticketNumber: result.ticketNumber, rank: result.rank };
-            }
+              }
           }
         }
 
@@ -1110,7 +1326,7 @@ export default function Dashboard() {
             setWinningTicketInfo({ ...bestTicket, prize: prizeAmount });
           } catch (error) {
             console.error('Error getting ticket prize:', error);
-            setWinningTicketInfo(bestTicket);
+          setWinningTicketInfo(bestTicket);
           }
           
           setShowConfetti(true);
@@ -1675,7 +1891,7 @@ export default function Dashboard() {
                     setWinningTicketInfo({ ticketNumber: parseInt(ticketNumber.toString()), rank: rank, prize: prizeAmount });
                   } catch (error) {
                     console.error('Error getting ticket prize:', error);
-                    setWinningTicketInfo({ ticketNumber: parseInt(ticketNumber.toString()), rank: rank });
+                  setWinningTicketInfo({ ticketNumber: parseInt(ticketNumber.toString()), rank: rank });
                   }
                   // Continue processing this ticket for prize data, but we won't search more tickets
                 }
@@ -1715,7 +1931,7 @@ export default function Dashboard() {
                       setWinningTicketInfo({ ticketNumber: parseInt(ticketNumber.toString()), rank: 1, prize: prizeAmount });
                     } catch (error) {
                       console.error('Error getting ticket prize:', error);
-                      setWinningTicketInfo({ ticketNumber: parseInt(ticketNumber.toString()), rank: 1 });
+                    setWinningTicketInfo({ ticketNumber: parseInt(ticketNumber.toString()), rank: 1 });
                     }
                     
                     // Get ticket prize for prize data processing
@@ -1724,11 +1940,11 @@ export default function Dashboard() {
                       const prizeInWei = parseFloat(prizeAmount) * Math.pow(10, 18);
                       
                       if (prizeInWei > 0) {
-                        roundPrizes.push({
-                          ticketNumber: ticketNumber.toString(),
-                          rank: 1, // Winning ticket gets rank 1
+                      roundPrizes.push({
+                        ticketNumber: ticketNumber.toString(),
+                        rank: 1, // Winning ticket gets rank 1
                           prize: prizeInWei.toString()
-                        });
+                      });
                         totalRoundPrize += BigInt(prizeInWei);
                       }
                     } catch (prizeError) {
@@ -1857,25 +2073,56 @@ export default function Dashboard() {
 
         return (
           <>
-            {/* Timer and Purchase Section */}
+            {/* Timer, Promotional Card, and Purchase Section */}
             {roundCreatedAt && (
-              <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-6">
-                {/* Digital Timer Display - Smaller Width */}
-                <div className="bg-[#0f1f4a] border-2 border-[#1C3172] rounded-lg px-4 py-3 shadow-lg flex flex-col items-center w-full sm:w-1/3">
+              <div className="flex flex-col sm:flex-row justify-between items-stretch gap-4 mb-6">
+                {/* Digital Timer Display */}
+                <div className="bg-[#0f1f4a] border-2 border-[#1C3172] rounded-xl px-4 md:p-6 shadow-lg flex flex-col items-center justify-center w-full sm:w-1/3 min-h-[140px] md:min-h-[160px]">
                   <div className="text-sm md:text-base text-yellow-800 mb-2 font-medium">Time since round creation</div>
                   <div className="text-lg md:text-xl lg:text-2xl font-mono font-bold text-white tracking-widest bg-[#1C3172] px-3 py-1 rounded border border-[#2a4a8a]">
                     {timeSince}
                   </div>
                 </div>
 
+                {/* Buy TRDO Promotional Card */}
+                <div className="w-full sm:w-1/3 min-h-[140px] md:min-h-[160px]">
+                  <div className="relative overflow-hidden bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-xl p-4 md:p-6 text-center border border-gray-700 shadow-2xl group hover:shadow-blue-500/20 transition-all duration-500 before:absolute before:inset-0 before:rounded-xl before:bg-gradient-to-r before:from-yellow-400 before:via-orange-500 before:to-red-500 before:opacity-0 before:group-hover:opacity-100 before:transition-opacity before:duration-500 before:-z-10 before:blur-sm h-full flex flex-col justify-center">
+                    {/* Animated background elements */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 via-purple-600/10 to-pink-600/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                    <div className="absolute -top-2 -right-2 w-3 h-3 md:w-4 md:h-4 bg-yellow-400 rounded-full animate-pulse opacity-60"></div>
+                    <div className="absolute -bottom-1 -left-1 w-2 h-2 md:w-3 md:h-3 bg-green-400 rounded-full animate-pulse opacity-60" style={{animationDelay: '0.5s'}}></div>
+                    
+                    {/* Main content */}
+                    <div className="relative z-10">
+                      <div className="text-gray-300 text-xs md:text-sm mb-3 md:mb-4">
+                        Get TRDO tokens to purchase tickets
+                      </div>
+                      
+                      <a
+                        href="https://www.biconomy.com/exchange/TRDO_USDT"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="relative overflow-hidden bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 hover:from-yellow-300 hover:via-orange-400 hover:to-red-400 text-gray-900 px-4 md:px-8 py-3 md:py-4 rounded-xl font-bold text-sm md:text-base transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-yellow-500/30 active:scale-95 w-full inline-block"
+                      >
+                        {/* Button shine effect */}
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+                        
+                        <span className="relative z-10 flex items-center justify-center">
+                          🛒 Buy TRDO
+                        </span>
+                      </a>
+                    </div>
+                  </div>
+                </div>
+
                 {/* Purchase Ticket Button or Ticket Card */}
-                <div className="w-full sm:flex-1 sm:max-w-xs">
+                <div className="w-full sm:w-1/3 min-h-[140px] md:min-h-[160px]">
                   {!isConnected ? (
-                    <div className="bg-gray-800 rounded-xl p-4 text-center">
+                    <div className="bg-gray-800 rounded-xl p-4 md:p-6 text-center h-full flex flex-col justify-center">
                       <div className="text-gray-400 text-sm mb-2">Connect wallet to purchase tickets</div>
               </div>
                   ) : !dashboardData.isRegistered ? (
-                    <div className="bg-gray-800 rounded-xl p-4 text-center">
+                    <div className="bg-gray-800 rounded-xl p-4 md:p-6 text-center h-full flex flex-col justify-center">
                       <div className="text-gray-400 text-sm mb-2">Register first to purchase tickets</div>
                       <button
                         onClick={() => navigateToSection('registration')}
@@ -1886,7 +2133,7 @@ export default function Dashboard() {
                     </div>
                   ) : hasPurchasedTicket ? (
                     // Enhanced lottery-themed ticket card
-                    <div className="relative overflow-hidden bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 rounded-xl p-3 md:p-5 text-center shadow-2xl group hover:shadow-yellow-500/30 transition-all duration-500 transform hover:scale-105 before:absolute before:inset-0 before:rounded-xl before:bg-gradient-to-r before:from-yellow-300 before:via-orange-400 before:to-red-400 before:opacity-0 before:group-hover:opacity-100 before:transition-opacity before:duration-500 before:-z-10 before:blur-md">
+                    <div className="relative overflow-hidden bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 rounded-xl p-4 md:p-6 text-center shadow-2xl group hover:shadow-yellow-500/30 transition-all duration-500 transform hover:scale-105 before:absolute before:inset-0 before:rounded-xl before:bg-gradient-to-r before:from-yellow-300 before:via-orange-400 before:to-red-400 before:opacity-0 before:group-hover:opacity-100 before:transition-opacity before:duration-500 before:-z-10 before:blur-md h-full flex flex-col justify-center">
                       {/* Animated sparkles */}
                       <div className="absolute top-1 right-1 md:top-2 md:right-2 text-yellow-200 animate-pulse text-sm md:text-base">✨</div>
                       <div className="absolute bottom-1 left-1 md:bottom-2 md:left-2 text-yellow-200 animate-pulse text-sm md:text-base" style={{animationDelay: '0.3s'}}>✨</div>
@@ -1903,7 +2150,7 @@ export default function Dashboard() {
                     </div>
                   ) : (
                     // Enhanced lottery-themed purchase section
-                    <div className="relative overflow-hidden bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-xl p-4 md:p-6 text-center border border-gray-700 shadow-2xl group hover:shadow-blue-500/20 transition-all duration-500 before:absolute before:inset-0 before:rounded-xl before:bg-gradient-to-r before:from-yellow-400 before:via-orange-500 before:to-red-500 before:opacity-0 before:group-hover:opacity-100 before:transition-opacity before:duration-500 before:-z-10 before:blur-sm">
+                    <div className="relative overflow-hidden bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-xl p-4 md:p-6 text-center border border-gray-700 shadow-2xl group hover:shadow-blue-500/20 transition-all duration-500 before:absolute before:inset-0 before:rounded-xl before:bg-gradient-to-r before:from-yellow-400 before:via-orange-500 before:to-red-500 before:opacity-0 before:group-hover:opacity-100 before:transition-opacity before:duration-500 before:-z-10 before:blur-sm h-full flex flex-col justify-center">
                       {/* Animated background elements */}
                       <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 via-purple-600/10 to-pink-600/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                       <div className="absolute -top-2 -right-2 w-3 h-3 md:w-4 md:h-4 bg-yellow-400 rounded-full animate-pulse opacity-60"></div>
@@ -1972,7 +2219,7 @@ export default function Dashboard() {
                 iconImage="18.png"
                 title="Current Round" 
                 value={dashboardData.currentRound || 0} 
-                subtitle="Active lottery round"
+                subtitle="Active lottery round" 
                 isLoading={isDataInitializing || dashboardData.currentRound === 0}
               />
               <StatCard 
@@ -1981,7 +2228,7 @@ export default function Dashboard() {
                 title="Total Tickets" 
                 value={dashboardData.totalTickets || 0} 
                 subtitle="Available in current round"
-                iconSize={80}
+                iconSize={80} 
                 isLoading={isDataInitializing || dashboardData.currentRound === 0}
               />
               <StatCard 
@@ -1989,7 +2236,7 @@ export default function Dashboard() {
                 iconImage="14.png"
                 title="Tickets Sold" 
                 value={dashboardData.ticketsSold || 0} 
-                subtitle={`${(dashboardData.totalTickets || 0) - (dashboardData.ticketsSold || 0)} remaining`}
+                subtitle={`${(dashboardData.totalTickets || 0) - (dashboardData.ticketsSold || 0)} remaining`} 
                 isLoading={isDataInitializing || dashboardData.currentRound === 0}
               />
               <StatCard 
@@ -1997,7 +2244,7 @@ export default function Dashboard() {
                 iconImage="11.png"
                 title="Prize Pool" 
                 value={formatUSDT(dashboardData.prizePool || '0')}
-                subtitle="TRDO"
+                subtitle="TRDO" 
                 isLoading={isDataInitializing || dashboardData.currentRound === 0}
               />
             </div>
@@ -2008,16 +2255,16 @@ export default function Dashboard() {
                 iconImage="19.png"
                 title="Ticket Price" 
                 value={formatUSDT(dashboardData.ticketPrice || '0')} 
-                subtitle="TRDO per ticket"
+                subtitle="TRDO per ticket" 
                 isLoading={isDataInitializing || dashboardData.currentRound === 0}
               />
               <div className="relative">
-                <StatCard 
-                  icon=""
-                  iconImage="13.png"
-                  title="Draw Status" 
-                  value={dashboardData.drawExecuted ? "Completed" : "Pending"} 
-                  subtitle="Current round status"
+              <StatCard 
+                icon=""
+                iconImage="13.png"
+                title="Draw Status" 
+                value={dashboardData.drawExecuted ? "Completed" : "Pending"} 
+                subtitle="Current round status" 
                   isLoading={isDataInitializing || dashboardData.currentRound === 0}
                 />
                 {/* Manual refresh button for draw status */}
@@ -2070,6 +2317,12 @@ export default function Dashboard() {
             }
             .animate-fall {
               animation: fall linear infinite;
+            }
+            /* Mobile-specific confetti optimizations */
+            @media (max-width: 768px) {
+              .animate-fall {
+                animation-duration: 3s !important;
+              }
             }
           `}</style>
           <ConfettiCelebration winningTicketInfo={winningTicketInfo} />
@@ -2889,6 +3142,9 @@ export default function Dashboard() {
           </div>
         );
 
+      case 'how-to-play':
+        return <PowerPointViewer />;
+
       default:
         return null;
     }
@@ -2917,14 +3173,14 @@ export default function Dashboard() {
   // Update timer every second
   useEffect(() => {
     if (!roundCreatedAt) return;
-          const update = () => {
-        const now = Math.floor(Date.now() / 1000);
-        const diff = now - roundCreatedAt;
-        const hours = Math.floor(diff / 3600);
-        const minutes = Math.floor((diff % 3600) / 60);
+    const update = () => {
+      const now = Math.floor(Date.now() / 1000);
+      const diff = now - roundCreatedAt;
+      const hours = Math.floor(diff / 3600);
+      const minutes = Math.floor((diff % 3600) / 60);
         const seconds = diff % 60;
         setTimeSince(`${hours} hr:${minutes.toString().padStart(2, '0')} min:${seconds.toString().padStart(2, '0')} sec`);
-      };
+    };
     update();
     const timer = setInterval(update, 1000);
     return () => clearInterval(timer);
@@ -3396,7 +3652,7 @@ function TopRankedTicketsSection({ currentRound }: { currentRound: number }) {
       // Only set loading to true if this is the initial load and we don't have any data
       // This prevents showing loading when backend has cached data
       if (isInitialLoad && topTickets.length === 0) {
-        setLoading(true);
+      setLoading(true);
       }
       
       fetchingRef.current = true;
@@ -3472,7 +3728,7 @@ function TopRankedTicketsSection({ currentRound }: { currentRound: number }) {
   if (!loading && !isInitialLoad && topTickets.length === 0) {
     return <div className="text-center text-gray-400 py-4">No ranked tickets found.</div>;
   }
-  
+
   // Ensure we only show exactly 3 tickets with ranks 1-3
   const validTopTickets = topTickets
     .filter(ticket => ticket.rank >= 1 && ticket.rank <= 3)
@@ -3633,41 +3889,12 @@ function TopRankedTicketsSection({ currentRound }: { currentRound: number }) {
             )}
           </button>
         </div>
-        <div className="flex justify-center items-end gap-2 md:gap-4 lg:gap-6 mb-8 relative">
-          {/* 2nd Place - Left */}
-          {top3[1] && (
-            <div
-              className="flip-card flex-shrink-0 relative"
-              tabIndex={0}
-              style={{ 
-                zIndex: 9,
-                animation: 'bounce 2s ease-in-out infinite',
-                animationDelay: '0.2s'
-              }}
-            >
-              <div className="flip-card-outer">
-                <div className="flip-card-inner" style={{ minHeight: 320, width: '260px' }}>
-                  {/* Front */}
-                  <div className={`flip-card-front bg-gradient-to-br ${rankColors[1]} flex flex-col items-center justify-center p-8 w-full h-full`}>
-                    <div className={`text-5xl font-extrabold mb-3 ${rankTextColors[1]} ${rankShadow[1]}`}>🥈</div>
-                    <div className="text-xl font-black text-white mb-2 tracking-wider drop-shadow-md">Ticket #{top3[1].ticketNumber}</div>
-                    <div className={`text-base font-bold mb-1 uppercase tracking-wide ${rankTextColors[1]} ${rankShadow[1]}`}>Rank: {top3[1].rank}</div>
-                  </div>
-                  {/* Back */}
-                  <div className="flip-card-back bg-gradient-to-br from-black via-blue-900 to-blue-800 flex flex-col items-center justify-center p-8 w-full h-full">
-                    <div className="text-xs font-semibold text-white/80 mb-1 uppercase tracking-widest">Owner</div>
-                    <div className="text-base font-mono text-white bg-blue-900/60 rounded px-3 py-2 mb-3 break-all text-center shadow-inner">{shorten(top3[1].owner)}</div>
-                    <div className="text-base font-bold text-white mb-2">Prize: {top3[1].prize} TRDO</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* 1st Place - Center */}
+        {/* Mobile: Vertical Stack, Desktop: Horizontal Podium */}
+        <div className="flex flex-col md:flex-row justify-center items-center gap-4 md:gap-6 lg:gap-8 mb-8 relative">
+          {/* 1st Place - Always First on Mobile, Center on Desktop */}
           {top3[0] && (
             <div
-              className="flip-card flex-shrink-0 relative"
+              className="flip-card w-full max-w-[280px] md:max-w-[260px] relative"
               tabIndex={0}
               style={{ 
                 zIndex: 10,
@@ -3676,28 +3903,58 @@ function TopRankedTicketsSection({ currentRound }: { currentRound: number }) {
               }}
             >
               <div className="flip-card-outer">
-                <div className="flip-card-inner" style={{ minHeight: 320, width: '260px' }}>
+                <div className="flip-card-inner" style={{ minHeight: '280px', width: '100%' }}>
                   {/* Front */}
-                  <div className={`flip-card-front bg-gradient-to-br ${rankColors[0]} flex flex-col items-center justify-center p-8 w-full h-full`}>
-                    <div className={`text-5xl font-extrabold mb-3 ${rankTextColors[0]} ${rankShadow[0]}`}>🥇</div>
-                    <div className="text-xl font-black text-white mb-2 tracking-wider drop-shadow-md">Ticket #{top3[0].ticketNumber}</div>
-                    <div className={`text-base font-bold mb-1 uppercase tracking-wide ${rankTextColors[0]} ${rankShadow[0]}`}>Rank: {top3[0].rank}</div>
+                  <div className={`flip-card-front bg-gradient-to-br ${rankColors[0]} flex flex-col items-center justify-center p-6 md:p-8 w-full h-full`}>
+                    <div className={`text-4xl md:text-5xl font-extrabold mb-2 md:mb-3 ${rankTextColors[0]} ${rankShadow[0]}`}>🥇</div>
+                    <div className="text-lg md:text-xl font-black text-white mb-1 md:mb-2 tracking-wider drop-shadow-md text-center">Ticket #{top3[0].ticketNumber}</div>
+                    <div className={`text-sm md:text-base font-bold mb-1 uppercase tracking-wide ${rankTextColors[0]} ${rankShadow[0]}`}>Rank: {top3[0].rank}</div>
                   </div>
                   {/* Back */}
-                  <div className="flip-card-back bg-gradient-to-br from-black via-blue-900 to-blue-800 flex flex-col items-center justify-center p-8 w-full h-full">
+                  <div className="flip-card-back bg-gradient-to-br from-black via-blue-900 to-blue-800 flex flex-col items-center justify-center p-6 md:p-8 w-full h-full">
                     <div className="text-xs font-semibold text-white/80 mb-1 uppercase tracking-widest">Owner</div>
-                    <div className="text-base font-mono text-white bg-blue-900/60 rounded px-3 py-2 mb-3 break-all text-center shadow-inner">{shorten(top3[0].owner)}</div>
-                    <div className="text-base font-bold text-white mb-2">Prize: {top3[0].prize} TRDO</div>
+                    <div className="text-sm md:text-base font-mono text-white bg-blue-900/60 rounded px-2 md:px-3 py-1 md:py-2 mb-2 md:mb-3 break-all text-center shadow-inner">{shorten(top3[0].owner)}</div>
+                    <div className="text-sm md:text-base font-bold text-white mb-2">Prize: {top3[0].prize} TRDO</div>
                   </div>
                 </div>
               </div>
             </div>
           )}
 
-          {/* 3rd Place - Right */}
+          {/* 2nd Place - Second on Mobile, Left on Desktop */}
+          {top3[1] && (
+            <div
+              className="flip-card w-full max-w-[280px] md:max-w-[260px] relative order-2 md:order-1"
+                tabIndex={0}
+              style={{ 
+                zIndex: 9,
+                animation: 'bounce 2s ease-in-out infinite',
+                animationDelay: '0.2s'
+              }}
+            >
+              <div className="flip-card-outer">
+                <div className="flip-card-inner" style={{ minHeight: '280px', width: '100%' }}>
+                  {/* Front */}
+                  <div className={`flip-card-front bg-gradient-to-br ${rankColors[1]} flex flex-col items-center justify-center p-6 md:p-8 w-full h-full`}>
+                    <div className={`text-4xl md:text-5xl font-extrabold mb-2 md:mb-3 ${rankTextColors[1]} ${rankShadow[1]}`}>🥈</div>
+                    <div className="text-lg md:text-xl font-black text-white mb-1 md:mb-2 tracking-wider drop-shadow-md text-center">Ticket #{top3[1].ticketNumber}</div>
+                    <div className={`text-sm md:text-base font-bold mb-1 uppercase tracking-wide ${rankTextColors[1]} ${rankShadow[1]}`}>Rank: {top3[1].rank}</div>
+                  </div>
+                  {/* Back */}
+                  <div className="flip-card-back bg-gradient-to-br from-black via-blue-900 to-blue-800 flex flex-col items-center justify-center p-6 md:p-8 w-full h-full">
+                    <div className="text-xs font-semibold text-white/80 mb-1 uppercase tracking-widest">Owner</div>
+                    <div className="text-sm md:text-base font-mono text-white bg-blue-900/60 rounded px-2 md:px-3 py-1 md:py-2 mb-2 md:mb-3 break-all text-center shadow-inner">{shorten(top3[1].owner)}</div>
+                    <div className="text-sm md:text-base font-bold text-white mb-2">Prize: {top3[1].prize} TRDO</div>
+                  </div>
+                </div>
+                </div>
+              </div>
+          )}
+
+          {/* 3rd Place - Third on Mobile, Right on Desktop */}
           {top3[2] && (
             <div
-              className="flip-card flex-shrink-0 relative"
+              className="flip-card w-full max-w-[280px] md:max-w-[260px] relative order-3 md:order-3"
               tabIndex={0}
               style={{ 
                 zIndex: 8,
@@ -3706,23 +3963,23 @@ function TopRankedTicketsSection({ currentRound }: { currentRound: number }) {
               }}
             >
               <div className="flip-card-outer">
-                <div className="flip-card-inner" style={{ minHeight: 320, width: '260px' }}>
+                <div className="flip-card-inner" style={{ minHeight: '280px', width: '100%' }}>
                   {/* Front */}
-                  <div className={`flip-card-front bg-gradient-to-br ${rankColors[2]} flex flex-col items-center justify-center p-8 w-full h-full`}>
-                    <div className={`text-5xl font-extrabold mb-3 ${rankTextColors[2]} ${rankShadow[2]}`}>🥉</div>
-                    <div className="text-xl font-black text-white mb-2 tracking-wider drop-shadow-md">Ticket #{top3[2].ticketNumber}</div>
-                    <div className={`text-base font-bold mb-1 uppercase tracking-wide ${rankTextColors[2]} ${rankShadow[2]}`}>Rank: {top3[2].rank}</div>
+                  <div className={`flip-card-front bg-gradient-to-br ${rankColors[2]} flex flex-col items-center justify-center p-6 md:p-8 w-full h-full`}>
+                    <div className={`text-4xl md:text-5xl font-extrabold mb-2 md:mb-3 ${rankTextColors[2]} ${rankShadow[2]}`}>🥉</div>
+                    <div className="text-lg md:text-xl font-black text-white mb-1 md:mb-2 tracking-wider drop-shadow-md text-center">Ticket #{top3[2].ticketNumber}</div>
+                    <div className={`text-sm md:text-base font-bold mb-1 uppercase tracking-wide ${rankTextColors[2]} ${rankShadow[2]}`}>Rank: {top3[2].rank}</div>
                   </div>
                   {/* Back */}
-                  <div className="flip-card-back bg-gradient-to-br from-black via-blue-900 to-blue-800 flex flex-col items-center justify-center p-8 w-full h-full">
+                  <div className="flip-card-back bg-gradient-to-br from-black via-blue-900 to-blue-800 flex flex-col items-center justify-center p-6 md:p-8 w-full h-full">
                     <div className="text-xs font-semibold text-white/80 mb-1 uppercase tracking-widest">Owner</div>
-                    <div className="text-base font-mono text-white bg-blue-900/60 rounded px-3 py-2 mb-3 break-all text-center shadow-inner">{shorten(top3[2].owner)}</div>
-                    <div className="text-base font-bold text-white mb-2">Prize: {top3[2].prize} TRDO</div>
+                    <div className="text-sm md:text-base font-mono text-white bg-blue-900/60 rounded px-2 md:px-3 py-1 md:py-2 mb-2 md:mb-3 break-all text-center shadow-inner">{shorten(top3[2].owner)}</div>
+                    <div className="text-sm md:text-base font-bold text-white mb-2">Prize: {top3[2].prize} TRDO</div>
                   </div>
                 </div>
               </div>
-            </div>
-          )}
+          </div>
+        )}
         </div>
       </div>
     </>
