@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useAccount, useReadContract, useWriteContract } from 'wagmi';
 import { useWallet } from '../hooks/useWallet';
@@ -121,9 +121,10 @@ interface StatCardProps {
   subtitle: string;
   bgClass?: string;
   iconSize?: number;
+  isLoading?: boolean;
 }
 
-const StatCard = ({ icon, iconImage, title, value, subtitle, bgClass = "bg-opacity-0", iconSize = 80 }: StatCardProps) => {
+const StatCard = ({ icon, iconImage, title, value, subtitle, bgClass = "bg-opacity-0", iconSize = 80, isLoading = false }: StatCardProps) => {
   return (
     <div className={`relative rounded-xl p-4 md:p-6 border-2 border-blue-500 bg-blue-900/10 ${bgClass} group overflow-hidden transition-all duration-300 hover:border-blue-400 stat-card-fluid h-full min-h-[140px] md:min-h-[160px] flex flex-col justify-center`}>
       <div className="stat-card-background"></div>
@@ -137,7 +138,14 @@ const StatCard = ({ icon, iconImage, title, value, subtitle, bgClass = "bg-opaci
         )}
         <div className="flex-1 min-w-0">
           <div className="text-xs md:text-sm lg:text-base text-gray-200 font-medium leading-tight">{title}</div>
-          <div className="text-lg md:text-xl lg:text-2xl xl:text-3xl font-bold text-white mb-1 leading-tight">{value}</div>
+          {isLoading ? (
+            <div className="flex items-center gap-2 mb-1">
+              <div className="animate-spin rounded-full h-4 w-4 md:h-5 md:w-5 lg:h-6 lg:w-6 border-b-2 border-blue-400"></div>
+              <span className="text-sm md:text-base lg:text-lg text-gray-400">Loading...</span>
+            </div>
+          ) : (
+            <div className="text-lg md:text-xl lg:text-2xl xl:text-3xl font-bold text-white mb-1 leading-tight">{value}</div>
+          )}
           <div className="text-xs text-gray-300 leading-tight">{subtitle}</div>
         </div>
       </div>
@@ -516,90 +524,92 @@ const ComprehensivePrizeDisplay = ({
 };
 
 // Confetti Celebration Component
-const ConfettiCelebration = ({ onClose, winningTicketInfo }: { onClose?: () => void; winningTicketInfo: { ticketNumber: number; rank: number } | null }) => {
-  const getRankText = (rank: number) => {
-    switch (rank) {
-      case 1: return '1st Place 🥇';
-      case 2: return '2nd Place 🥈';
-      case 3: return '3rd Place 🥉';
-      case 4: return '4th Place';
-      case 5: return '5th Place';
-      default: return `${rank}th Place`;
-    }
-  };
+interface ConfettiItem {
+  id: string;
+  left: string;
+  delay: string;
+  duration: string;
+  color: string;
+  fontSize?: string;
+  rotation?: string;
+  emoji: string;
+  top?: string;
+}
+
+const ConfettiCelebration = ({ onClose, winningTicketInfo }: { onClose?: () => void; winningTicketInfo: { ticketNumber: number; rank: number; prize?: string } | null }) => {
+  // Pre-calculate confetti data to avoid recalculating on every render
+  const confettiData = useMemo(() => {
+    const colors = ['#FFD700', '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#FF8C00', '#FF1493'];
+    const emojis = ['🎉', '🎊', '✨', '💫', '🌟', '⭐', '🎈', '🎁', '🏆', '💎'];
+    
+    // Reduced number of confetti elements for better performance
+    const fallingConfetti = Array.from({ length: 20 }, (_, i) => ({
+      id: `falling-${i}`,
+      left: `${Math.random() * 100}%`,
+      delay: `${Math.random() * 2}s`,
+      duration: `${2 + Math.random() * 2}s`,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      fontSize: `${12 + Math.random() * 6}px`,
+      rotation: `${Math.random() * 360}deg`,
+      emoji: emojis[Math.floor(Math.random() * emojis.length)]
+    }));
+
+    const floatingConfetti = Array.from({ length: 12 }, (_, i) => ({
+      id: `floating-${i}`,
+      left: `${Math.random() * 100}%`,
+      top: `${Math.random() * 100}%`,
+      delay: `${Math.random() * 2}s`,
+      duration: `${2 + Math.random() * 2}s`,
+      color: colors[Math.floor(Math.random() * 6)],
+      emoji: emojis[Math.floor(Math.random() * 6)]
+    }));
+
+    return { 
+      fallingConfetti: fallingConfetti as ConfettiItem[], 
+      floatingConfetti: floatingConfetti as ConfettiItem[] 
+    };
+  }, []); // Empty dependency array - calculate once
 
   return (
     <div className="relative bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 rounded-2xl p-6 md:p-8 text-center shadow-xl border-4 border-yellow-300" style={{ 
       boxShadow: '0 0 30px rgba(255, 215, 0, 0.6), 0 0 60px rgba(255, 165, 0, 0.4), 0 0 90px rgba(255, 69, 0, 0.2)'
     }}>
-      {/* Falling Confetti Animation */}
+      {/* Optimized Falling Confetti Animation */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {[...Array(50)].map((_, i) => (
+        {confettiData.fallingConfetti.map((confetti) => (
           <div
-            key={`falling-${i}`}
+            key={confetti.id}
             className="absolute animate-fall"
             style={{
-              left: `${Math.random() * 100}%`,
+              left: confetti.left,
               top: '-10%',
-              animationDelay: `${Math.random() * 3}s`,
-              animationDuration: `${3 + Math.random() * 2}s`,
-              color: ['#FFD700', '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#FF8C00', '#FF1493'][Math.floor(Math.random() * 8)],
-              fontSize: `${12 + Math.random() * 8}px`,
-              transform: `rotate(${Math.random() * 360}deg)`
+              animationDelay: confetti.delay,
+              animationDuration: confetti.duration,
+              color: confetti.color,
+              fontSize: confetti.fontSize,
+              transform: `rotate(${confetti.rotation})`
             }}
           >
-            {['🎉', '🎊', '✨', '💫', '🌟', '⭐', '🎈', '🎁', '🏆', '💎'][Math.floor(Math.random() * 10)]}
+            {confetti.emoji}
           </div>
         ))}
       </div>
 
-      {/* Celebration Strips */}
+      {/* Optimized Floating Confetti Animation */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {[...Array(8)].map((_, i) => (
+        {confettiData.floatingConfetti.map((confetti) => (
           <div
-            key={`strip-${i}`}
-            className="absolute w-1 h-16 bg-gradient-to-b from-transparent via-yellow-300 to-transparent animate-bounce"
-            style={{
-              left: `${10 + (i * 10)}%`,
-              top: '-20%',
-              animationDelay: `${i * 0.3}s`,
-              animationDuration: '2s',
-              transform: 'rotate(45deg)',
-              opacity: 0.8
-            }}
-          />
-        ))}
-        {[...Array(8)].map((_, i) => (
-          <div
-            key={`strip-right-${i}`}
-            className="absolute w-1 h-16 bg-gradient-to-b from-transparent via-orange-300 to-transparent animate-bounce"
-            style={{
-              right: `${10 + (i * 10)}%`,
-              top: '-20%',
-              animationDelay: `${(i + 4) * 0.3}s`,
-              animationDuration: '2.5s',
-              transform: 'rotate(-45deg)',
-              opacity: 0.8
-            }}
-          />
-        ))}
-      </div>
-
-      {/* Floating Confetti Animation */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {[...Array(30)].map((_, i) => (
-          <div
-            key={`floating-${i}`}
+            key={confetti.id}
             className="absolute animate-bounce"
             style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              animationDelay: `${Math.random() * 3}s`,
-              animationDuration: `${2 + Math.random() * 3}s`,
-              color: ['#FFD700', '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7'][Math.floor(Math.random() * 6)]
+              left: confetti.left,
+              top: confetti.top,
+              animationDelay: confetti.delay,
+              animationDuration: confetti.duration,
+              color: confetti.color
             }}
           >
-            {['🎉', '🎊', '✨', '💫', '🌟', '⭐'][Math.floor(Math.random() * 6)]}
+            {confetti.emoji}
           </div>
         ))}
       </div>
@@ -610,15 +620,8 @@ const ConfettiCelebration = ({ onClose, winningTicketInfo }: { onClose?: () => v
           CONGRATULATIONS!
         </h2>
         <p className="text-lg md:text-xl text-white mb-4 font-semibold drop-shadow-md">
-          You Won Rewards! 🏆
+          Your ticket has won prize {winningTicketInfo?.prize ? parseFloat(winningTicketInfo.prize).toFixed(5) : '0.00000'} TRDO! 🏆
         </p>
-        {winningTicketInfo && (
-          <p className="text-sm md:text-base text-white/90 mb-4 drop-shadow-sm">
-            Your ticket #{winningTicketInfo.ticketNumber} is ranked {getRankText(winningTicketInfo.rank)}!<br />
-            Check your prizes below.
-          </p>
-        )}
-       
       </div>
     </div>
   );
@@ -699,9 +702,14 @@ export default function Dashboard() {
   // NEW STATE - Track confetti celebration
   const [showConfetti, setShowConfetti] = useState(false);
   const [hasShownConfetti, setHasShownConfetti] = useState(false);
-  const [winningTicketInfo, setWinningTicketInfo] = useState<{ ticketNumber: number; rank: number } | null>(null);
+  const [winningTicketInfo, setWinningTicketInfo] = useState<{ ticketNumber: number; rank: number; prize?: string } | null>(null);
   const [dataRefreshed, setDataRefreshed] = useState(false);
   const [confettiShownForRound, setConfettiShownForRound] = useState<number | null>(null);
+  const [isDataInitializing, setIsDataInitializing] = useState(true);
+
+  // NEW STATE - Cache for ticket prize data to avoid repeated contract calls
+  const [ticketPrizeCache, setTicketPrizeCache] = useState<{[key: string]: string}>({});
+  const [ticketRankCache, setTicketRankCache] = useState<{[key: string]: number}>({});
 
   // Unified loading state for all sections
   const [sectionLoading, setSectionLoading] = useState(false);
@@ -719,24 +727,23 @@ export default function Dashboard() {
 
   const {
     address,
-    isConnected 
-  } = useAccount();
-
-  const { 
+    isConnected,
     dashboardData,
     loading,
+    notification: walletNotification,
     registerUser,
     purchaseTickets,
     claimPrize,
     claimAllPrizes,
-    showNotification,
-    formatAddress,
-    formatBalance,
-    hasUserPurchasedTicket,
     getUserTotalPrize,
     getUserSponsorInfo,
     getUserPrizeData,
     getUserLevelCounts,
+    showNotification,
+    forceRefreshData,
+    formatAddress,
+    formatBalance,
+    hasUserPurchasedTicket,
     checkIsClaimed,
     refreshDrawStatus,
     isTransactionPending,
@@ -756,6 +763,11 @@ export default function Dashboard() {
       address: address,
       isConnected: isConnected
     });
+
+    // Mark data as initialized when we have valid round data
+    if (dashboardData.currentRound !== undefined && dashboardData.currentRound !== null) {
+      setIsDataInitializing(false);
+    }
   }, [dashboardData, address, isConnected]);
 
   // Add debugging for wallet connection
@@ -771,12 +783,14 @@ export default function Dashboard() {
   useEffect(() => {
     if (isConnected && address) {
       setIsWalletSwitching(true);
+      setIsDataInitializing(true); // Reset initialization state when wallet changes
       const timer = setTimeout(() => {
         setIsWalletSwitching(false);
       }, 500);
       return () => clearTimeout(timer);
     } else {
       setIsWalletSwitching(false);
+      setIsDataInitializing(true); // Reset when wallet disconnects
     }
   }, [address]);
 
@@ -978,35 +992,16 @@ export default function Dashboard() {
         let hasWinningTicket = false;
         let bestTicket: { ticketNumber: number; rank: number } | null = null;
 
-        // Batch API calls to reduce rate limiting
-        const ticketPromises = dashboardData.myTickets.map((ticketNumber: number) => 
-          publicClient.readContract({
-            address: CONTRACT_ADDRESSES.LOTTERY as `0x${string}`,
-            abi: LOTTERY_ABI,
-            functionName: 'getTicketRank',
-            args: [BigInt(dashboardData.currentRound), BigInt(ticketNumber)]
-          }).then((rank: any) => ({ ticketNumber, rank: Number(rank) }))
-          .catch(() => ({ ticketNumber, rank: 0 })) // Handle errors gracefully
-        );
-
-        // Process in batches of 5 to prevent rate limiting
-        const batchSize = 5;
+        // Use optimized ticket rank fetching with caching
         const results = [];
-        
-        for (let i = 0; i < ticketPromises.length; i += batchSize) {
-          const batch = ticketPromises.slice(i, i + batchSize);
-          const batchResults = await Promise.all(batch);
-          results.push(...batchResults);
-          
-          // Add delay between batches
-          if (i + batchSize < ticketPromises.length) {
-            await new Promise(resolve => setTimeout(resolve, 100));
-          }
+        for (const ticketNumber of dashboardData.myTickets) {
+          const rank = await getTicketRankOptimized(dashboardData.currentRound, ticketNumber);
+          results.push({ ticketNumber, rank });
         }
 
-        // Check for winning tickets
+        // Check for winning tickets - now show confetti for any rank >= 1
         for (const result of results) {
-          if (result.rank >= 1 && result.rank <= 3) {
+          if (result.rank >= 1) {
             hasWinningTicket = true;
             if (!bestTicket || result.rank < bestTicket.rank) {
               bestTicket = { ticketNumber: result.ticketNumber, rank: result.rank };
@@ -1014,10 +1009,19 @@ export default function Dashboard() {
           }
         }
 
-        // Show confetti if user has a winning ticket
+        // Show confetti if user has any winning ticket (rank >= 1)
         if (hasWinningTicket && bestTicket) {
           console.log('🎉 User has winning ticket! Showing confetti for:', bestTicket);
-          setWinningTicketInfo(bestTicket);
+          
+          // Get the prize amount for the winning ticket using optimized function
+          try {
+            const prizeAmount = await getTicketPrizeOptimized(dashboardData.currentRound, bestTicket.ticketNumber);
+            setWinningTicketInfo({ ...bestTicket, prize: prizeAmount });
+          } catch (error) {
+            console.error('Error getting ticket prize:', error);
+            setWinningTicketInfo(bestTicket);
+          }
+          
           setShowConfetti(true);
         } else {
           setShowConfetti(false);
@@ -1061,6 +1065,140 @@ export default function Dashboard() {
       generateReferralLink();
     }
   }, [address]);
+
+  // Helper function to get cached ticket rank or fetch from contract
+  const getTicketRankOptimized = async (roundId: number, ticketNumber: number): Promise<number> => {
+    const cacheKey = `${roundId}_${ticketNumber}_rank`;
+    
+    // Check cache first
+    if (ticketRankCache[cacheKey] !== undefined) {
+      return ticketRankCache[cacheKey];
+    }
+    
+    try {
+      const rank = await publicClient.readContract({
+        address: CONTRACT_ADDRESSES.LOTTERY as `0x${string}`,
+        abi: LOTTERY_ABI,
+        functionName: 'getTicketRank',
+        args: [BigInt(roundId), BigInt(ticketNumber)],
+      }) as bigint;
+      
+      const rankNumber = Number(rank);
+      
+      // Cache the result
+      setTicketRankCache(prev => ({
+        ...prev,
+        [cacheKey]: rankNumber
+      }));
+      
+      return rankNumber;
+    } catch (error) {
+      console.error(`Error getting ticket rank for ${ticketNumber}:`, error);
+      return 0;
+    }
+  };
+
+  // Helper function to get cached ticket prize or fetch from contract
+  const getTicketPrizeOptimized = async (roundId: number, ticketNumber: number): Promise<string> => {
+    const cacheKey = `${roundId}_${ticketNumber}_prize`;
+    
+    // Check cache first
+    if (ticketPrizeCache[cacheKey] !== undefined) {
+      return ticketPrizeCache[cacheKey];
+    }
+    
+    try {
+      const ticketPrize = await publicClient.readContract({
+        address: CONTRACT_ADDRESSES.LOTTERY as `0x${string}`,
+        abi: LOTTERY_ABI,
+        functionName: 'calculateTicketPrize',
+        args: [BigInt(roundId), BigInt(ticketNumber)],
+      }) as bigint;
+      
+      const prizeAmount = formatEther(ticketPrize);
+      
+      // Cache the result
+      setTicketPrizeCache(prev => ({
+        ...prev,
+        [cacheKey]: prizeAmount
+      }));
+      
+      return prizeAmount;
+    } catch (error) {
+      console.error(`Error getting ticket prize for ${ticketNumber}:`, error);
+      return '0';
+    }
+  };
+
+  // Clear cache when round changes, wallet changes, or draw is executed
+  useEffect(() => {
+    setTicketPrizeCache({});
+    setTicketRankCache({});
+  }, [dashboardData.currentRound, address, dashboardData.drawExecuted]);
+
+  // Load cache from localStorage on component mount
+  useEffect(() => {
+    if (dashboardData.currentRound && address) {
+      try {
+        const cacheKey = `ticketCache_${address}_${dashboardData.currentRound}`;
+        const cachedData = localStorage.getItem(cacheKey);
+        if (cachedData) {
+          const parsed = JSON.parse(cachedData);
+          setTicketPrizeCache(parsed.prize || {});
+          setTicketRankCache(parsed.rank || {});
+          console.log('📦 Loaded ticket cache from localStorage');
+        }
+      } catch (error) {
+        console.warn('Error loading ticket cache from localStorage:', error);
+      }
+    }
+  }, [dashboardData.currentRound, address]);
+
+  // Save cache to localStorage whenever it changes
+  useEffect(() => {
+    if (dashboardData.currentRound && address && (Object.keys(ticketPrizeCache).length > 0 || Object.keys(ticketRankCache).length > 0)) {
+      try {
+        const cacheKey = `ticketCache_${address}_${dashboardData.currentRound}`;
+        const cacheData = {
+          prize: ticketPrizeCache,
+          rank: ticketRankCache,
+          timestamp: Date.now()
+        };
+        localStorage.setItem(cacheKey, JSON.stringify(cacheData));
+        
+        // Clean up old cache entries to prevent localStorage from getting too large
+        const cleanupOldCache = () => {
+          try {
+            const keys = Object.keys(localStorage);
+            const ticketCacheKeys = keys.filter(key => key.startsWith('ticketCache_'));
+            
+            // Keep only the last 5 rounds for each user
+            const userCacheKeys = ticketCacheKeys.filter(key => key.includes(address || ''));
+            if (userCacheKeys.length > 5) {
+              const sortedKeys = userCacheKeys.sort((a, b) => {
+                const roundA = parseInt(a.split('_').pop() || '0');
+                const roundB = parseInt(b.split('_').pop() || '0');
+                return roundB - roundA; // Sort by round number descending
+              });
+              
+              // Remove oldest entries
+              const keysToRemove = sortedKeys.slice(5);
+              keysToRemove.forEach(key => {
+                localStorage.removeItem(key);
+                console.log(`🧹 Cleaned up old ticket cache: ${key}`);
+              });
+            }
+          } catch (error) {
+            console.warn('Error cleaning up old ticket cache:', error);
+          }
+        };
+        
+        cleanupOldCache();
+      } catch (error) {
+        console.warn('Error saving ticket cache to localStorage:', error);
+      }
+    }
+  }, [ticketPrizeCache, ticketRankCache, dashboardData.currentRound, address]);
 
   // Function to get total prize amount for current round
   const getTotalPrizeAmount = async () => {
@@ -1166,26 +1304,12 @@ export default function Dashboard() {
       // Get actual rank and prize data from contract if draw is executed
       if (dashboardData.drawExecuted && isSold) {
         try {
-          // Get ticket rank
-          const ticketRank = await publicClient.readContract({
-            address: CONTRACT_ADDRESSES.LOTTERY as `0x${string}`,
-            abi: LOTTERY_ABI,
-            functionName: 'getTicketRank',
-            args: [BigInt(dashboardData.currentRound), BigInt(ticketNumber)],
-          }) as bigint;
+          // Get ticket rank using optimized function
+          rank = await getTicketRankOptimized(dashboardData.currentRound, ticketNumber);
           
-          rank = Number(ticketRank);
-          
-          // Get ticket prize if it has a rank
+          // Get ticket prize if it has a rank using optimized function
           if (rank > 0) {
-            const ticketPrize = await publicClient.readContract({
-              address: CONTRACT_ADDRESSES.LOTTERY as `0x${string}`,
-              abi: LOTTERY_ABI,
-              functionName: 'calculateTicketPrize',
-              args: [BigInt(dashboardData.currentRound), BigInt(ticketNumber)],
-            }) as bigint;
-            
-            prize = formatUSDT(formatEther(ticketPrize));
+            prize = formatUSDT(await getTicketPrizeOptimized(dashboardData.currentRound, ticketNumber));
           }
           
           // Get ticket owner
@@ -1304,6 +1428,9 @@ export default function Dashboard() {
       // Refresh data after successful claim (exact same as register.js)
       setTimeout(() => {
         loadPrizeData();
+        // Clear cache after successful claim to ensure fresh data
+        setTicketPrizeCache({});
+        setTicketRankCache({});
       }, 3000);
 
     } catch (error: any) {
@@ -1444,42 +1571,37 @@ export default function Dashboard() {
             // Only check rank if ticket is owned by someone (not zero address)
             if (ticketOwner && ticketOwner !== '0x0000000000000000000000000000000000000000') {
               try {
-                // Get ticket rank (0 = no prize, 1-10 = winning ranks)
-                const ticketRank = await publicClient.readContract({
-                  address: CONTRACT_ADDRESSES.LOTTERY as `0x${string}`,
-                  abi: LOTTERY_ABI,
-                  functionName: 'getTicketRank',
-                  args: [BigInt(currentRound), BigInt(ticketNumber)],
-                }) as bigint;
-                
-                const rank = parseInt(ticketRank.toString());
+                // Get ticket rank using optimized function
+                const rank = await getTicketRankOptimized(currentRound, parseInt(ticketNumber.toString()));
                 
                 // Check if this is a top 3 rank (1-3) - if found, we can stop searching
                 if (rank >= 1 && rank <= 3) {
                   hasTop3Rank = true;
                   console.log(`🎉 Found top 3 rank (${rank}) for ticket ${ticketNumber}! Stopping search.`);
                   // Store winning ticket info for confetti display
-                  setWinningTicketInfo({ ticketNumber: parseInt(ticketNumber.toString()), rank: rank });
+                  try {
+                    const prizeAmount = await getTicketPrizeOptimized(currentRound, parseInt(ticketNumber.toString()));
+                    setWinningTicketInfo({ ticketNumber: parseInt(ticketNumber.toString()), rank: rank, prize: prizeAmount });
+                  } catch (error) {
+                    console.error('Error getting ticket prize:', error);
+                    setWinningTicketInfo({ ticketNumber: parseInt(ticketNumber.toString()), rank: rank });
+                  }
                   // Continue processing this ticket for prize data, but we won't search more tickets
                 }
                 
                 if (rank > 0) {
                   try {
-                    // Calculate prize for this ticket
-                    const ticketPrize = await publicClient.readContract({
-                      address: CONTRACT_ADDRESSES.LOTTERY as `0x${string}`,
-                      abi: LOTTERY_ABI,
-                      functionName: 'calculateTicketPrize',
-                      args: [BigInt(currentRound), BigInt(ticketNumber)],
-                    }) as bigint;
+                    // Calculate prize for this ticket using optimized function
+                    const prizeAmount = await getTicketPrizeOptimized(currentRound, parseInt(ticketNumber.toString()));
+                    const prizeInWei = parseFloat(prizeAmount) * Math.pow(10, 18);
                     
-                    if (BigInt(ticketPrize) > 0) {
+                    if (prizeInWei > 0) {
                       roundPrizes.push({
                         ticketNumber: ticketNumber.toString(),
                         rank: rank,
-                        prize: ticketPrize.toString()
+                        prize: prizeInWei.toString()
                       });
-                      totalRoundPrize += BigInt(ticketPrize);
+                      totalRoundPrize += BigInt(prizeInWei);
                     }
                   } catch (prizeError) {
                     console.warn(`Could not calculate prize for ticket ${ticketNumber} in round ${currentRound}:`, prizeError);
@@ -1497,21 +1619,29 @@ export default function Dashboard() {
                     hasTop3Rank = true; // Winning ticket is rank 1
                     console.log(`🎉 Found winning ticket ${ticketNumber}! Stopping search.`);
                     // Store winning ticket info for confetti display
-                    setWinningTicketInfo({ ticketNumber: parseInt(ticketNumber.toString()), rank: 1 });
-                    const ticketPrize = await publicClient.readContract({
-                      address: CONTRACT_ADDRESSES.LOTTERY as `0x${string}`,
-                      abi: LOTTERY_ABI,
-                      functionName: 'calculateTicketPrize',
-                      args: [BigInt(currentRound), BigInt(ticketNumber)],
-                    }) as bigint;
+                    try {
+                      const prizeAmount = await getTicketPrizeOptimized(currentRound, parseInt(ticketNumber.toString()));
+                      setWinningTicketInfo({ ticketNumber: parseInt(ticketNumber.toString()), rank: 1, prize: prizeAmount });
+                    } catch (error) {
+                      console.error('Error getting ticket prize:', error);
+                      setWinningTicketInfo({ ticketNumber: parseInt(ticketNumber.toString()), rank: 1 });
+                    }
                     
-                    if (BigInt(ticketPrize) > 0) {
-                      roundPrizes.push({
-                        ticketNumber: ticketNumber.toString(),
-                        rank: 1, // Winning ticket gets rank 1
-                        prize: ticketPrize.toString()
-                      });
-                      totalRoundPrize += BigInt(ticketPrize);
+                    // Get ticket prize for prize data processing
+                    try {
+                      const prizeAmount = await getTicketPrizeOptimized(currentRound, parseInt(ticketNumber.toString()));
+                      const prizeInWei = parseFloat(prizeAmount) * Math.pow(10, 18);
+                      
+                      if (prizeInWei > 0) {
+                        roundPrizes.push({
+                          ticketNumber: ticketNumber.toString(),
+                          rank: 1, // Winning ticket gets rank 1
+                          prize: prizeInWei.toString()
+                        });
+                        totalRoundPrize += BigInt(prizeInWei);
+                      }
+                    } catch (prizeError) {
+                      console.warn(`Could not calculate prize for winning ticket ${ticketNumber} in round ${currentRound}:`, prizeError);
                     }
                   }
                 } catch (altError) {
@@ -1641,7 +1771,7 @@ export default function Dashboard() {
               <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-6">
                 {/* Digital Timer Display - Smaller Width */}
                 <div className="bg-[#0f1f4a] border-2 border-[#1C3172] rounded-lg px-4 py-3 shadow-lg flex flex-col items-center w-full sm:w-1/3">
-                  <div className="text-xs text-gray-400 mb-2">Time since round creation</div>
+                  <div className="text-sm md:text-base text-yellow-800 mb-2 font-medium">Time since round creation</div>
                   <div className="text-lg md:text-xl lg:text-2xl font-mono font-bold text-white tracking-widest bg-[#1C3172] px-3 py-1 rounded border border-[#2a4a8a]">
                     {timeSince}
                   </div>
@@ -1751,7 +1881,8 @@ export default function Dashboard() {
                 iconImage="18.png"
                 title="Current Round" 
                 value={dashboardData.currentRound || 0} 
-                subtitle="Active lottery round" 
+                subtitle="Active lottery round"
+                isLoading={isDataInitializing || dashboardData.currentRound === 0}
               />
               <StatCard 
                 icon=""
@@ -1759,21 +1890,24 @@ export default function Dashboard() {
                 title="Total Tickets" 
                 value={dashboardData.totalTickets || 0} 
                 subtitle="Available in current round"
-                iconSize={80} 
+                iconSize={80}
+                isLoading={isDataInitializing || dashboardData.currentRound === 0}
               />
               <StatCard 
                 icon=""
                 iconImage="14.png"
                 title="Tickets Sold" 
                 value={dashboardData.ticketsSold || 0} 
-                subtitle={`${(dashboardData.totalTickets || 0) - (dashboardData.ticketsSold || 0)} remaining`} 
+                subtitle={`${(dashboardData.totalTickets || 0) - (dashboardData.ticketsSold || 0)} remaining`}
+                isLoading={isDataInitializing || dashboardData.currentRound === 0}
               />
               <StatCard 
                 icon=""
                 iconImage="11.png"
                 title="Prize Pool" 
                 value={formatUSDT(dashboardData.prizePool || '0')}
-                subtitle="TRDO" 
+                subtitle="TRDO"
+                isLoading={isDataInitializing || dashboardData.currentRound === 0}
               />
             </div>
             
@@ -1783,7 +1917,8 @@ export default function Dashboard() {
                 iconImage="19.png"
                 title="Ticket Price" 
                 value={formatUSDT(dashboardData.ticketPrice || '0')} 
-                subtitle="TRDO per ticket" 
+                subtitle="TRDO per ticket"
+                isLoading={isDataInitializing || dashboardData.currentRound === 0}
               />
               <div className="relative">
                 <StatCard 
@@ -1791,7 +1926,8 @@ export default function Dashboard() {
                   iconImage="13.png"
                   title="Draw Status" 
                   value={dashboardData.drawExecuted ? "Completed" : "Pending"} 
-                  subtitle="Current round status" 
+                  subtitle="Current round status"
+                  isLoading={isDataInitializing || dashboardData.currentRound === 0}
                 />
                 {/* Manual refresh button for draw status */}
                 {!dashboardData.drawExecuted && (
@@ -1823,6 +1959,7 @@ export default function Dashboard() {
                 title="Total Played TRDO" 
                 value={formatUSDT(dashboardData.totalPlayed || '0')} 
                 subtitle="Total TRDO played"
+                isLoading={isDataInitializing || dashboardData.currentRound === 0}
               />
             </div>
 
@@ -2683,18 +2820,111 @@ export default function Dashboard() {
   // Update timer every second
   useEffect(() => {
     if (!roundCreatedAt) return;
-    const update = () => {
-      const now = Math.floor(Date.now() / 1000);
-      const diff = now - roundCreatedAt;
-      const hours = Math.floor(diff / 3600);
-      const minutes = Math.floor((diff % 3600) / 60);
-      const seconds = diff % 60;
-      setTimeSince(`${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
-    };
+          const update = () => {
+        const now = Math.floor(Date.now() / 1000);
+        const diff = now - roundCreatedAt;
+        const hours = Math.floor(diff / 3600);
+        const minutes = Math.floor((diff % 3600) / 60);
+        const seconds = diff % 60;
+        setTimeSince(`${hours} hr:${minutes.toString().padStart(2, '0')} min:${seconds.toString().padStart(2, '0')} sec`);
+      };
     update();
     const timer = setInterval(update, 1000);
     return () => clearInterval(timer);
   }, [roundCreatedAt]);
+
+  // NEW EFFECT - Clear cache when current round changes
+  useEffect(() => {
+    if (dashboardData.currentRound && dashboardData.currentRound > 0) {
+      console.log(`🔄 Current round changed to ${dashboardData.currentRound}, clearing old caches...`);
+      
+      // Clear all localStorage caches for old rounds
+      const keysToRemove = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('topTickets_round_')) {
+          const roundFromKey = parseInt(key.replace('topTickets_round_', ''));
+          if (roundFromKey !== dashboardData.currentRound) {
+            keysToRemove.push(key);
+          }
+        }
+      }
+      
+      keysToRemove.forEach(key => {
+        localStorage.removeItem(key);
+        console.log(`🗑️ Removed cache for ${key}`);
+      });
+      
+      // Clear claimed rounds cache for old rounds
+      if (address) {
+        try {
+          const claimedRounds = JSON.parse(localStorage.getItem(`claimedRounds_${address}`) || '[]');
+          const updatedClaimedRounds = claimedRounds.filter((round: number) => round === dashboardData.currentRound);
+          localStorage.setItem(`claimedRounds_${address}`, JSON.stringify(updatedClaimedRounds));
+        } catch (error) {
+          console.warn('Error updating claimed rounds cache:', error);
+        }
+      }
+    }
+  }, [dashboardData.currentRound, address]);
+
+  // Function to clear backend cache
+  const clearBackendCache = async () => {
+    try {
+      console.log('🗑️ Clearing backend cache...');
+      const response = await fetch('/api/top-ranks?clearCache=true', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (response.ok) {
+        console.log('✅ Backend cache cleared successfully');
+        setNotification({ type: 'success', message: 'Cache cleared successfully! 🔄' });
+      } else {
+        console.error('❌ Failed to clear backend cache');
+        setNotification({ type: 'error', message: 'Failed to clear cache' });
+      }
+    } catch (error) {
+      console.error('❌ Error clearing backend cache:', error);
+      setNotification({ type: 'error', message: 'Error clearing cache' });
+    }
+  };
+
+  // Enhanced force refresh function
+  const handleForceRefresh = async () => {
+    try {
+      setNotification({ type: 'info', message: 'Refreshing data... 🔄' });
+      
+      // Clear backend cache first
+      await clearBackendCache();
+      
+      // Force refresh contract data
+      await forceRefreshData();
+      
+      // Clear frontend cache
+      if (dashboardData.currentRound) {
+        const keysToRemove = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && key.startsWith('topTickets_round_')) {
+            keysToRemove.push(key);
+          }
+        }
+        
+        keysToRemove.forEach(key => {
+          localStorage.removeItem(key);
+          console.log(`🗑️ Removed cache for ${key}`);
+        });
+      }
+      
+      setNotification({ type: 'success', message: 'Data refreshed successfully! ✅' });
+    } catch (error) {
+      console.error('❌ Error during force refresh:', error);
+      setNotification({ type: 'error', message: 'Failed to refresh data' });
+    }
+  };
 
   return (
     <div className="bg-black min-h-screen flex">

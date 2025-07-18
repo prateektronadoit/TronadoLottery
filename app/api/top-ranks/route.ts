@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createPublicClient, http, fallback } from 'viem';
 import { polygon } from 'wagmi/chains';
-import { writeFileSync, readFileSync, existsSync, mkdirSync } from 'fs';
+import { writeFileSync, readFileSync, existsSync, mkdirSync, unlinkSync } from 'fs';
 import { join } from 'path';
 
 // Force dynamic rendering for this API route
@@ -109,6 +109,20 @@ function saveCache(cache: Map<string, any>) {
 // Initialize cache
 const topRanksCache = loadCache();
 console.log(`📁 Loaded ${topRanksCache.size} cached rounds from disk`);
+
+// Function to clear all cache
+function clearAllCache() {
+  try {
+    if (existsSync(CACHE_FILE)) {
+      unlinkSync(CACHE_FILE);
+      console.log('🗑️ Cache file deleted');
+    }
+    topRanksCache.clear();
+    console.log('🗑️ In-memory cache cleared');
+  } catch (error) {
+    console.warn('Error clearing cache:', error);
+  }
+}
 
 // Function to get current round from contract
 async function getCurrentRoundFromContract(): Promise<number> {
@@ -227,6 +241,17 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const roundId = searchParams.get('roundId');
+    const clearCache = searchParams.get('clearCache');
+    
+    // Handle cache clearing request
+    if (clearCache === 'true') {
+      clearAllCache();
+      return NextResponse.json({
+        success: true,
+        message: 'Cache cleared successfully',
+        timestamp: Date.now()
+      });
+    }
     
     if (!roundId) {
       return NextResponse.json(
@@ -241,6 +266,28 @@ export async function GET(request: NextRequest) {
         { error: 'Invalid roundId' },
         { status: 400 }
       );
+    }
+
+    // Get the actual current round from contract to validate
+    const actualCurrentRound = await getCurrentRoundFromContract();
+    console.log(`🔍 Requested round: ${currentRound}, Actual current round: ${actualCurrentRound}`);
+    
+    // If the requested round is significantly behind the actual current round, clear old cache
+    if (actualCurrentRound > 0 && currentRound < actualCurrentRound - 1) {
+      console.log(`🧹 Clearing old cache data for round ${currentRound} (current round is ${actualCurrentRound})`);
+      
+      // Remove old round data from cache
+      topRanksCache.delete(currentRound.toString());
+      saveCache(topRanksCache);
+      
+      return NextResponse.json({
+        success: true,
+        data: [],
+        round: currentRound,
+        timestamp: Date.now(),
+        message: 'Round data cleared - round is no longer current',
+        cached: false
+      });
     }
 
     // Check cache first

@@ -89,19 +89,33 @@ export const useWallet = () => {
   });
 
   // Contract reads
-  const { data: currentRoundId } = useReadContract({
+  const { data: currentRoundId, refetch: refetchCurrentRound } = useReadContract({
     address: CONTRACT_ADDRESSES.LOTTERY as `0x${string}`,
     abi: LOTTERY_ABI,
     functionName: 'currentRoundId',
+    query: {
+      // Force refresh every 30 seconds to ensure we get the latest round
+      refetchInterval: 30000,
+      // Refetch when window regains focus
+      refetchOnWindowFocus: true,
+      // Refetch when reconnecting
+      refetchOnReconnect: true,
+    },
   });
 
-  const { data: roundData } = useReadContract({
+  const { data: roundData, refetch: refetchRoundData } = useReadContract({
     address: CONTRACT_ADDRESSES.LOTTERY as `0x${string}`,
     abi: LOTTERY_ABI,
     functionName: 'getRoundInfo',
     args: [currentRoundId || BigInt('0')],
     query: {
       enabled: !!currentRoundId || currentRoundId === BigInt(0),
+      // Force refresh every 30 seconds
+      refetchInterval: 30000,
+      // Refetch when window regains focus
+      refetchOnWindowFocus: true,
+      // Refetch when reconnecting
+      refetchOnReconnect: true,
     },
   });
 
@@ -1089,6 +1103,20 @@ export const useWallet = () => {
 
   // Removed redundant polling function to prevent excessive API calls
 
+  // Function to force refresh all contract data
+  const forceRefreshData = async () => {
+    console.log('🔄 Force refreshing all contract data...');
+    try {
+      await Promise.all([
+        refetchCurrentRound(),
+        refetchRoundData()
+      ]);
+      console.log('✅ Contract data refresh completed');
+    } catch (error) {
+      console.error('❌ Error refreshing contract data:', error);
+    }
+  };
+
   return {
     // State
     address,
@@ -1129,6 +1157,7 @@ export const useWallet = () => {
     getUserLevelCounts,
     checkIsClaimed,
     refreshDrawStatus,
+    forceRefreshData, // Add the new function
 
     
     // Contract addresses for reference
