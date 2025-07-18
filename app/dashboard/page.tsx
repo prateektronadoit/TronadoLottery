@@ -1766,10 +1766,10 @@ export default function Dashboard() {
 
         return (
           <>
-            {/* Timer and Purchase Section */}
+            {/* Timer, Promotional Card, and Purchase Section */}
             {roundCreatedAt && (
               <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-6">
-                {/* Digital Timer Display - Smaller Width */}
+                {/* Digital Timer Display */}
                 <div className="bg-[#0f1f4a] border-2 border-[#1C3172] rounded-lg px-4 py-3 shadow-lg flex flex-col items-center w-full sm:w-1/3">
                   <div className="text-sm md:text-base text-yellow-800 mb-2 font-medium">Time since round creation</div>
                   <div className="text-lg md:text-xl lg:text-2xl font-mono font-bold text-white tracking-widest bg-[#1C3172] px-3 py-1 rounded border border-[#2a4a8a]">
@@ -1777,8 +1777,39 @@ export default function Dashboard() {
                   </div>
                 </div>
 
+                {/* Buy TRDO Promotional Card */}
+                <div className="w-full sm:w-1/3">
+                  <div className="relative overflow-hidden bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-xl p-4 md:p-6 text-center border border-gray-700 shadow-2xl group hover:shadow-blue-500/20 transition-all duration-500 before:absolute before:inset-0 before:rounded-xl before:bg-gradient-to-r before:from-yellow-400 before:via-orange-500 before:to-red-500 before:opacity-0 before:group-hover:opacity-100 before:transition-opacity before:duration-500 before:-z-10 before:blur-sm">
+                    {/* Animated background elements */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 via-purple-600/10 to-pink-600/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                    <div className="absolute -top-2 -right-2 w-3 h-3 md:w-4 md:h-4 bg-yellow-400 rounded-full animate-pulse opacity-60"></div>
+                    <div className="absolute -bottom-1 -left-1 w-2 h-2 md:w-3 md:h-3 bg-green-400 rounded-full animate-pulse opacity-60" style={{animationDelay: '0.5s'}}></div>
+                    
+                    {/* Main content */}
+                    <div className="relative z-10">
+                      <div className="text-gray-300 text-xs md:text-sm mb-3 md:mb-4">
+                        Get TRDO tokens to purchase tickets
+                      </div>
+                      
+                      <a
+                        href="https://www.biconomy.com/exchange/TRDO_USDT"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="relative overflow-hidden bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 hover:from-yellow-300 hover:via-orange-400 hover:to-red-400 text-gray-900 px-4 md:px-8 py-3 md:py-4 rounded-xl font-bold text-sm md:text-base transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-yellow-500/30 active:scale-95 w-full inline-block"
+                      >
+                        {/* Button shine effect */}
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+                        
+                        <span className="relative z-10 flex items-center justify-center">
+                          🛒 Buy TRDO
+                        </span>
+                      </a>
+                    </div>
+                  </div>
+                </div>
+
                 {/* Purchase Ticket Button or Ticket Card */}
-                <div className="w-full sm:flex-1 sm:max-w-xs">
+                <div className="w-full sm:w-1/3">
                   {!isConnected ? (
                     <div className="bg-gray-800 rounded-xl p-4 text-center">
                       <div className="text-gray-400 text-sm mb-2">Connect wallet to purchase tickets</div>
