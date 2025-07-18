@@ -8,7 +8,7 @@ import Footer from '@/components/Footer';
 
 import PlatformFeatures from '@/components/PlatformFeatures';
 import HowItWorks from '@/components/HowItWorks';
-import PlatformStatistics from '@/components/PlatformStatistics';
+// import PlatformStatistics from '@/components/PlatformStatistics';
 import Testimonials from '@/components/Testimonials';
 import CallToAction from '@/components/CallToAction';
 
@@ -100,7 +100,7 @@ export default function HomePage() {
       </section>
 
       {/* Components only */}
-      <PlatformStatistics />
+      {/* <PlatformStatistics /> */}
       <PlatformFeatures />
       <Testimonials />
       <CallToAction />

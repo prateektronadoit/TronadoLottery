@@ -436,15 +436,17 @@ const ComprehensivePrizeDisplay = React.memo(forwardRef<{ refreshData: () => voi
         
         <div className="relative overflow-hidden bg-gradient-to-br from-purple-900/80 via-purple-800/60 to-purple-900/80 rounded-xl p-4 md:p-5 text-center border-2 border-purple-500/50 shadow-lg hover:shadow-purple-500/20 transition-all duration-500 group before:absolute before:inset-0 before:bg-gradient-to-r before:from-purple-400/20 before:via-transparent before:to-purple-400/20 before:opacity-0 before:group-hover:opacity-100 before:transition-opacity before:duration-500 before:-z-10">
           <div className="absolute top-2 right-2 text-purple-300 animate-pulse text-sm">🎁</div>
-          <div className="absolute top-2 left-2">
-            <button
-              onClick={() => setShowDownlineInfoPopup(true)}
-              className="text-white-900 hover:text-purple-100 text-sm bg-purple-800/50 hover:bg-purple-700/50 rounded-full w-6 h-6 flex items-center justify-center transition-all duration-200 hover:scale-110"
-              title="Info about Downline Income"
-            >
-              !
-            </button>
-          </div>
+          {(parseFloat(prizeData.rewardSponsorIncome || '0') > 0 && isClaimed === true) && (
+            <div className="absolute top-2 left-2">
+              <button
+                onClick={() => setShowDownlineInfoPopup(true)}
+                className="text-white-900 hover:text-purple-100 text-sm bg-purple-800/50 hover:bg-purple-700/50 rounded-full w-6 h-6 flex items-center justify-center transition-all duration-200 hover:scale-110"
+                title="Info about Downline Income"
+              >
+                !
+              </button>
+            </div>
+          )}
           <div className="text-xl md:text-2xl font-bold text-purple-300 mb-1">
             {formatUSDT(prizeData.rewardSponsorIncome || '0')}
           </div>
