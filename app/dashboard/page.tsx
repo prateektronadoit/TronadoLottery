@@ -1674,7 +1674,7 @@ export default function Dashboard() {
                       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
                       
                       <div className="relative z-10">
-                        <div className="text-xl md:text-2xl lg:text-3xl font-mono font-black text-gray-900 mb-1 md:mb-2 tracking-wider">
+                        <div className="text-sm md:text-base lg:text-xl font-mono font-bold text-blue-800 mb-1 md:mb-2 tracking-wide">
                           Ticket Number:{dashboardData.myTickets && dashboardData.myTickets.length > 0 ? dashboardData.myTickets[0] : 'N/A'}
                         </div>
                         {/* <div className="text-gray-700 text-xs md:text-sm font-semibold">Round #{dashboardData.currentRound}</div> */}
