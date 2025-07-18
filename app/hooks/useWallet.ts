@@ -356,7 +356,7 @@ export const useWallet = () => {
       const prizePool = (totalRevenue * BigInt(75)) / BigInt(100);
       
       console.log('📊 Setting dashboard data for round:', Number(currentRoundId));
-      
+      console.log("testing...");
       // Clear draw status cache for old rounds when round changes
       clearDrawStatusCache(Number(currentRoundId));
       
