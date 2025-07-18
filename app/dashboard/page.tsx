@@ -3490,6 +3490,19 @@ function TopRankedTicketsSection({ currentRound }: { currentRound: number }) {
         .glassy-card-back {
           transform: rotateY(180deg);
         }
+        
+        /* Bounce animation for podium cards */
+        @keyframes bounce {
+          0%, 20%, 50%, 80%, 100% {
+            transform: translateY(0);
+          }
+          40% {
+            transform: translateY(-10px);
+          }
+          60% {
+            transform: translateY(-5px);
+          }
+        }
       `}</style>
       <div className="mt-6 mb-8">
         <div className="flex justify-between items-center mb-6">
@@ -3523,34 +3536,96 @@ function TopRankedTicketsSection({ currentRound }: { currentRound: number }) {
             )}
           </button>
         </div>
-        <div className="flex flex-col md:flex-row justify-center gap-4 md:gap-8 mb-8">
-          {top3.map((ticket, idx) => (
+        <div className="flex justify-center items-end gap-2 md:gap-4 lg:gap-6 mb-8 relative">
+          {/* 2nd Place - Left */}
+          {top3[1] && (
             <div
-              key={idx}
-              className="flip-card w-full md:min-w-[260px] md:max-w-[300px] flex-shrink-0 relative"
+              className="flip-card flex-shrink-0 relative"
               tabIndex={0}
-              style={{ zIndex: 10 - idx }}
+              style={{ 
+                zIndex: 9,
+                animation: 'bounce 2s ease-in-out infinite',
+                animationDelay: '0.2s'
+              }}
             >
-              <div className="flip-card-outer w-full h-full">
-                <div className="flip-card-inner w-full h-full" style={{ minHeight: 320 }}>
+              <div className="flip-card-outer">
+                <div className="flip-card-inner" style={{ minHeight: 320, width: '260px' }}>
                   {/* Front */}
-                  <div className={`flip-card-front bg-gradient-to-br ${rankColors[idx]} flex flex-col items-center justify-center p-8 w-full h-full`}>
-                    <div className={`text-5xl font-extrabold mb-3 ${rankTextColors[idx]} ${rankShadow[idx]}`}>{
-                      idx === 0 ? '🥇' : idx === 1 ? '🥈' : '🥉'
-                    }</div>
-                    <div className="text-2xl font-black text-white mb-2 tracking-wider drop-shadow-md">Ticket #{ticket.ticketNumber}</div>
-                    <div className={`text-lg font-bold mb-1 uppercase tracking-wide ${rankTextColors[idx]} ${rankShadow[idx]}`}>Rank: {ticket.rank}</div>
+                  <div className={`flip-card-front bg-gradient-to-br ${rankColors[1]} flex flex-col items-center justify-center p-8 w-full h-full`}>
+                    <div className={`text-5xl font-extrabold mb-3 ${rankTextColors[1]} ${rankShadow[1]}`}>🥈</div>
+                    <div className="text-xl font-black text-white mb-2 tracking-wider drop-shadow-md">Ticket #{top3[1].ticketNumber}</div>
+                    <div className={`text-base font-bold mb-1 uppercase tracking-wide ${rankTextColors[1]} ${rankShadow[1]}`}>Rank: {top3[1].rank}</div>
                   </div>
                   {/* Back */}
                   <div className="flip-card-back bg-gradient-to-br from-black via-blue-900 to-blue-800 flex flex-col items-center justify-center p-8 w-full h-full">
                     <div className="text-xs font-semibold text-white/80 mb-1 uppercase tracking-widest">Owner</div>
-                    <div className="text-lg font-mono text-white bg-blue-900/60 rounded px-3 py-2 mb-3 break-all text-center shadow-inner">{shorten(ticket.owner)}</div>
-                    <div className="text-lg font-bold text-white mb-2">Prize: {ticket.prize} TRDO</div>
+                    <div className="text-base font-mono text-white bg-blue-900/60 rounded px-3 py-2 mb-3 break-all text-center shadow-inner">{shorten(top3[1].owner)}</div>
+                    <div className="text-base font-bold text-white mb-2">Prize: {top3[1].prize} TRDO</div>
                   </div>
                 </div>
               </div>
             </div>
-          ))}
+          )}
+
+          {/* 1st Place - Center */}
+          {top3[0] && (
+            <div
+              className="flip-card flex-shrink-0 relative"
+              tabIndex={0}
+              style={{ 
+                zIndex: 10,
+                animation: 'bounce 2s ease-in-out infinite',
+                animationDelay: '0s'
+              }}
+            >
+              <div className="flip-card-outer">
+                <div className="flip-card-inner" style={{ minHeight: 320, width: '260px' }}>
+                  {/* Front */}
+                  <div className={`flip-card-front bg-gradient-to-br ${rankColors[0]} flex flex-col items-center justify-center p-8 w-full h-full`}>
+                    <div className={`text-5xl font-extrabold mb-3 ${rankTextColors[0]} ${rankShadow[0]}`}>🥇</div>
+                    <div className="text-xl font-black text-white mb-2 tracking-wider drop-shadow-md">Ticket #{top3[0].ticketNumber}</div>
+                    <div className={`text-base font-bold mb-1 uppercase tracking-wide ${rankTextColors[0]} ${rankShadow[0]}`}>Rank: {top3[0].rank}</div>
+                  </div>
+                  {/* Back */}
+                  <div className="flip-card-back bg-gradient-to-br from-black via-blue-900 to-blue-800 flex flex-col items-center justify-center p-8 w-full h-full">
+                    <div className="text-xs font-semibold text-white/80 mb-1 uppercase tracking-widest">Owner</div>
+                    <div className="text-base font-mono text-white bg-blue-900/60 rounded px-3 py-2 mb-3 break-all text-center shadow-inner">{shorten(top3[0].owner)}</div>
+                    <div className="text-base font-bold text-white mb-2">Prize: {top3[0].prize} TRDO</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 3rd Place - Right */}
+          {top3[2] && (
+            <div
+              className="flip-card flex-shrink-0 relative"
+              tabIndex={0}
+              style={{ 
+                zIndex: 8,
+                animation: 'bounce 2s ease-in-out infinite',
+                animationDelay: '0.4s'
+              }}
+            >
+              <div className="flip-card-outer">
+                <div className="flip-card-inner" style={{ minHeight: 320, width: '260px' }}>
+                  {/* Front */}
+                  <div className={`flip-card-front bg-gradient-to-br ${rankColors[2]} flex flex-col items-center justify-center p-8 w-full h-full`}>
+                    <div className={`text-5xl font-extrabold mb-3 ${rankTextColors[2]} ${rankShadow[2]}`}>🥉</div>
+                    <div className="text-xl font-black text-white mb-2 tracking-wider drop-shadow-md">Ticket #{top3[2].ticketNumber}</div>
+                    <div className={`text-base font-bold mb-1 uppercase tracking-wide ${rankTextColors[2]} ${rankShadow[2]}`}>Rank: {top3[2].rank}</div>
+                  </div>
+                  {/* Back */}
+                  <div className="flip-card-back bg-gradient-to-br from-black via-blue-900 to-blue-800 flex flex-col items-center justify-center p-8 w-full h-full">
+                    <div className="text-xs font-semibold text-white/80 mb-1 uppercase tracking-widest">Owner</div>
+                    <div className="text-base font-mono text-white bg-blue-900/60 rounded px-3 py-2 mb-3 break-all text-center shadow-inner">{shorten(top3[2].owner)}</div>
+                    <div className="text-base font-bold text-white mb-2">Prize: {top3[2].prize} TRDO</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </>
