@@ -446,8 +446,8 @@ export const useWallet = () => {
               intervalId = setInterval(pollDrawStatus, 60000); // 60 seconds
             }
           } else {
-            console.error('Error polling draw status:', error);
-          }
+        console.error('Error polling draw status:', error);
+      }
         } else {
           console.error('Error polling draw status:', error);
         }

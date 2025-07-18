@@ -1,0 +1,50 @@
+{
+  "1": {
+    "data": [
+      {
+        "ticketNumber": 70,
+        "rank": 1,
+        "owner": "0x2f1e47298E1Fd892c3b65dC7d0C78515326A4C42",
+        "prize": "112.500000"
+      },
+      {
+        "ticketNumber": 18,
+        "rank": 2,
+        "owner": "0x6a90Eb610daDDd6361bd60AacB8D5DeEb807B405",
+        "prize": "60.000000"
+      },
+      {
+        "ticketNumber": 45,
+        "rank": 3,
+        "owner": "0x6a90Eb610daDDd6361bd60AacB8D5DeEb807B405",
+        "prize": "30.000000"
+      }
+    ],
+    "round": 1,
+    "timestamp": 1752826453443
+  },
+  "4": {
+    "data": [
+      {
+        "ticketNumber": 39,
+        "rank": 1,
+        "owner": "0x6a90Eb610daDDd6361bd60AacB8D5DeEb807B405",
+        "prize": "112.500000"
+      },
+      {
+        "ticketNumber": 69,
+        "rank": 2,
+        "owner": "0x2f1e47298E1Fd892c3b65dC7d0C78515326A4C42",
+        "prize": "60.000000"
+      },
+      {
+        "ticketNumber": 52,
+        "rank": 3,
+        "owner": "0x2f1e47298E1Fd892c3b65dC7d0C78515326A4C42",
+        "prize": "30.000000"
+      }
+    ],
+    "round": 4,
+    "timestamp": 1752825577233
+  }
+}

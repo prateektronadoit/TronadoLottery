@@ -1006,7 +1006,7 @@ export default function Dashboard() {
 
         // Check for winning tickets
         for (const result of results) {
-          if (result.rank >= 1 && result.rank <= 5) {
+          if (result.rank >= 1 && result.rank <= 3) {
             hasWinningTicket = true;
             if (!bestTicket || result.rank < bestTicket.rank) {
               bestTicket = { ticketNumber: result.ticketNumber, rank: result.rank };
@@ -1356,7 +1356,7 @@ export default function Dashboard() {
       
       let totalPendingClaims = 0;
       let prizes: any[] = [];
-      let hasTop5Rank = false; // Track if user has tickets ranked 1-5
+      let hasTop3Rank = false; // Track if user has tickets ranked 1-3
       
       // Only check current round
       const currentRound = dashboardData.currentRound || 1;
@@ -1421,8 +1421,8 @@ export default function Dashboard() {
         let totalRoundPrize = BigInt(0);
         
         for (const ticketNumber of userTickets) {
-          // Stop searching if we already found a top 5 rank
-          if (hasTop5Rank) {
+          // Stop searching if we already found a top 3 rank
+          if (hasTop3Rank) {
             break;
           }
           
@@ -1454,10 +1454,10 @@ export default function Dashboard() {
                 
                 const rank = parseInt(ticketRank.toString());
                 
-                // Check if this is a top 5 rank (1-5) - if found, we can stop searching
-                if (rank >= 1 && rank <= 5) {
-                  hasTop5Rank = true;
-                  console.log(`🎉 Found top 5 rank (${rank}) for ticket ${ticketNumber}! Stopping search.`);
+                // Check if this is a top 3 rank (1-3) - if found, we can stop searching
+                if (rank >= 1 && rank <= 3) {
+                  hasTop3Rank = true;
+                  console.log(`🎉 Found top 3 rank (${rank}) for ticket ${ticketNumber}! Stopping search.`);
                   // Store winning ticket info for confetti display
                   setWinningTicketInfo({ ticketNumber: parseInt(ticketNumber.toString()), rank: rank });
                   // Continue processing this ticket for prize data, but we won't search more tickets
@@ -1494,7 +1494,7 @@ export default function Dashboard() {
                 try {
                   if (dashboardData.winningNumber === parseInt(ticketNumber.toString())) {
                     // This is the winning ticket, give it rank 1
-                    hasTop5Rank = true; // Winning ticket is rank 1
+                    hasTop3Rank = true; // Winning ticket is rank 1
                     console.log(`🎉 Found winning ticket ${ticketNumber}! Stopping search.`);
                     // Store winning ticket info for confetti display
                     setWinningTicketInfo({ ticketNumber: parseInt(ticketNumber.toString()), rank: 1 });
@@ -1526,9 +1526,9 @@ export default function Dashboard() {
           }
         }
         
-        // Show confetti celebration if user has top 5 rank and draw is executed
-        if (hasTop5Rank && dashboardData.drawExecuted && dataRefreshed && address && dashboardData.userInfo) {
-          console.log('🎉 User has top 5 rank! Showing persistent confetti celebration!');
+        // Show confetti celebration if user has top 3 rank and draw is executed
+        if (hasTop3Rank && dashboardData.drawExecuted && dataRefreshed && address && dashboardData.userInfo) {
+          console.log('🎉 User has top 3 rank! Showing persistent confetti celebration!');
           setShowConfetti(true);
           setHasShownConfetti(true);
         }
@@ -1643,7 +1643,7 @@ export default function Dashboard() {
                 <div className="bg-[#0f1f4a] border-2 border-[#1C3172] rounded-lg px-4 py-3 shadow-lg flex flex-col items-center w-full sm:w-1/3">
                   <div className="text-xs text-gray-400 mb-2">Time since round creation</div>
                   <div className="text-lg md:text-xl lg:text-2xl font-mono font-bold text-white tracking-widest bg-[#1C3172] px-3 py-1 rounded border border-[#2a4a8a]">
-                    {timeSince.split(':').slice(0, 2).join(':')}
+                    {timeSince}
                   </div>
                 </div>
 
@@ -1675,9 +1675,9 @@ export default function Dashboard() {
                       
                       <div className="relative z-10">
                         <div className="text-xl md:text-2xl lg:text-3xl font-mono font-black text-gray-900 mb-1 md:mb-2 tracking-wider">
-                          #{dashboardData.myTickets && dashboardData.myTickets.length > 0 ? dashboardData.myTickets[0] : 'N/A'}
+                          Ticket Number:{dashboardData.myTickets && dashboardData.myTickets.length > 0 ? dashboardData.myTickets[0] : 'N/A'}
                         </div>
-                        <div className="text-gray-700 text-xs md:text-sm font-semibold">Round #{dashboardData.currentRound}</div>
+                        {/* <div className="text-gray-700 text-xs md:text-sm font-semibold">Round #{dashboardData.currentRound}</div> */}
                       </div>
                     </div>
                   ) : (
@@ -2680,7 +2680,7 @@ export default function Dashboard() {
     fetchRoundCreatedAt();
   }, [dashboardData.currentRound]);
 
-  // Update timer every minute
+  // Update timer every second
   useEffect(() => {
     if (!roundCreatedAt) return;
     const update = () => {
@@ -2688,10 +2688,11 @@ export default function Dashboard() {
       const diff = now - roundCreatedAt;
       const hours = Math.floor(diff / 3600);
       const minutes = Math.floor((diff % 3600) / 60);
-      setTimeSince(`${hours} hours, ${minutes} minutes`);
+      const seconds = diff % 60;
+      setTimeSince(`${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
     };
     update();
-    const timer = setInterval(update, 60000);
+    const timer = setInterval(update, 1000);
     return () => clearInterval(timer);
   }, [roundCreatedAt]);
 
@@ -2968,6 +2969,8 @@ function TopRankedTicketsSection({ currentRound }: { currentRound: number }) {
   const [loading, setLoading] = useState(false);
   const [lastFetchedRound, setLastFetchedRound] = useState<number | null>(null);
   const [cacheKey, setCacheKey] = useState<string>('');
+  const fetchingRef = useRef(false); // Prevent multiple simultaneous fetches
+  const [isInitialLoad, setIsInitialLoad] = useState(true); // Track if this is the first load
 
   // Create a cache key for this round
   const currentCacheKey = `topTickets_${currentRound}`;
@@ -2999,13 +3002,14 @@ function TopRankedTicketsSection({ currentRound }: { currentRound: number }) {
   }, [currentRound]);
 
   const handleRefresh = () => {
+    // Force refresh by clearing cache and re-fetching
     setLastFetchedRound(null); // Force refresh
-    setTopTickets([]); // Clear existing data
     setCacheKey(''); // Clear cache key
     
     // Clear localStorage cache for this round
     try {
       localStorage.removeItem(currentCacheKey);
+      console.log('🔄 Manual refresh triggered for round', currentRound);
     } catch (error) {
       console.warn('Error clearing cache:', error);
     }
@@ -3013,20 +3017,23 @@ function TopRankedTicketsSection({ currentRound }: { currentRound: number }) {
 
   useEffect(() => {
     async function fetchTopTickets() {
-      // Reset state when round changes to ensure fresh data
-      if (lastFetchedRound !== null && lastFetchedRound !== currentRound) {
-        setTopTickets([]);
-        setCacheKey('');
-        setLastFetchedRound(null);
+      console.log(`🔄 useEffect triggered for round ${currentRound}`);
+      
+      // Prevent multiple simultaneous fetches
+      if (fetchingRef.current) {
+        console.log('⏳ Already fetching, skipping...');
+        return;
       }
-
-      // Check if we have cached data for this round
-      if (cacheKey === currentCacheKey && topTickets.length > 0) {
+      
+      // Don't fetch if no round
+      if (!currentRound || currentRound <= 0) {
+        console.log('❌ No valid round, skipping fetch');
         return;
       }
 
       // Check if we already fetched this round
       if (lastFetchedRound === currentRound && topTickets.length > 0) {
+        console.log('✅ Already have data for this round, skipping fetch');
         return;
       }
 
@@ -3035,18 +3042,17 @@ function TopRankedTicketsSection({ currentRound }: { currentRound: number }) {
         const cachedData = localStorage.getItem(currentCacheKey);
         if (cachedData) {
           const parsedData = JSON.parse(cachedData);
-          
-          // Cache is valid until round changes (ranks are permanent after draw execution)
           const cacheRound = parsedData.round || 0;
           const isCacheValid = cacheRound === currentRound;
           
           if (isCacheValid) {
+            console.log('✅ Using cached data for round', currentRound);
             setTopTickets(parsedData.data);
             setLastFetchedRound(currentRound);
-            setCacheKey(currentCacheKey);
+            setLoading(false);
+            setIsInitialLoad(false);
             return;
           } else {
-            // Remove invalid cache
             localStorage.removeItem(currentCacheKey);
           }
         }
@@ -3054,11 +3060,22 @@ function TopRankedTicketsSection({ currentRound }: { currentRound: number }) {
         console.warn('Error reading from cache:', error);
       }
 
-      setLoading(true);
+      // Reset state for new round
+      if (lastFetchedRound !== currentRound) {
+        setTopTickets([]);
+        setLastFetchedRound(null);
+      }
+
+      // Only set loading to true if this is the initial load and we don't have any data
+      // This prevents showing loading when backend has cached data
+      if (isInitialLoad && topTickets.length === 0) {
+        setLoading(true);
+      }
+      
+      fetchingRef.current = true;
+      console.log(`🔄 Fetching top 3 ranks for round ${currentRound} via API...`);
+      
       try {
-        console.log(`🔄 Fetching top 5 ranks for round ${currentRound} via API...`);
-        
-        // Use the new backend API
         const response = await fetch(`/api/top-ranks?roundId=${currentRound}`, {
           method: 'GET',
           headers: {
@@ -3076,9 +3093,8 @@ function TopRankedTicketsSection({ currentRound }: { currentRound: number }) {
           throw new Error(result.error || 'API returned error');
         }
 
-        console.log(`✅ API returned ${result.data.length} tickets:`, result.data);
+        console.log(`✅ API returned ${result.data.length} tickets (cached: ${result.cached}):`, result.data);
         
-        // Transform the data to match the expected format
         const transformedTickets = result.data.map((ticket: any) => ({
           ticketNumber: ticket.ticketNumber,
           rank: ticket.rank,
@@ -3086,16 +3102,18 @@ function TopRankedTicketsSection({ currentRound }: { currentRound: number }) {
           prize: ticket.prize
         }));
 
+        console.log(`🔄 Setting topTickets state with ${transformedTickets.length} tickets:`, transformedTickets);
         setTopTickets(transformedTickets);
         setLastFetchedRound(currentRound);
-        setCacheKey(currentCacheKey);
+        setIsInitialLoad(false);
         
         // Save to localStorage cache
         try {
           localStorage.setItem(currentCacheKey, JSON.stringify({
             data: transformedTickets,
             round: currentRound,
-            timestamp: Date.now()
+            timestamp: Date.now(),
+            backendCached: result.cached
           }));
         } catch (error) {
           console.warn('Error saving to cache:', error);
@@ -3104,34 +3122,41 @@ function TopRankedTicketsSection({ currentRound }: { currentRound: number }) {
         console.error('Error fetching top tickets:', err);
         setTopTickets([]);
       } finally {
+        console.log('🏁 Setting loading to false');
         setLoading(false);
+        fetchingRef.current = false;
       }
     }
     
-    if (currentRound && currentRound > 0) {
-      fetchTopTickets();
-    }
-  }, [currentRound, cacheKey, currentCacheKey]);
+    fetchTopTickets();
+  }, [currentRound]); // Only depend on currentRound
 
-  if (loading) {
+  // Only log once per render to avoid spam
+  if (loading && topTickets.length === 0) {
+    console.log(`🔍 TopRankedTicketsSection render - loading: ${loading}, topTickets.length: ${topTickets.length}, currentRound: ${currentRound}`);
+  }
+  
+  // Show loading only on initial load with no data
+  if (loading && isInitialLoad && topTickets.length === 0) {
     return <div className="text-center text-gray-400 py-4">Loading top tickets...</div>;
   }
-  if (!topTickets.length) {
+  
+  // Show no data message only if not loading and no data
+  if (!loading && !isInitialLoad && topTickets.length === 0) {
     return <div className="text-center text-gray-400 py-4">No ranked tickets found.</div>;
   }
   
-  // Ensure we only show exactly 5 tickets with ranks 1-5
+  // Ensure we only show exactly 3 tickets with ranks 1-3
   const validTopTickets = topTickets
-    .filter(ticket => ticket.rank >= 1 && ticket.rank <= 5)
+    .filter(ticket => ticket.rank >= 1 && ticket.rank <= 3)
     .sort((a, b) => a.rank - b.rank)
-    .slice(0, 5);
+    .slice(0, 3);
   
   if (!validTopTickets.length) {
-    return <div className="text-center text-gray-400 py-4">No top 5 ranked tickets found.</div>;
+    return <div className="text-center text-gray-400 py-4">No top 3 ranked tickets found.</div>;
   }
   
-  const top3 = validTopTickets.slice(0, 3);
-  const next2 = validTopTickets.slice(3, 5);
+  const top3 = validTopTickets;
 
   const rankColors = [
     'from-amber-700 to-yellow-400',
@@ -3238,20 +3263,31 @@ function TopRankedTicketsSection({ currentRound }: { currentRound: number }) {
       `}</style>
       <div className="mt-6 mb-8">
         <div className="flex justify-between items-center mb-6">
-          <h3 className="text-2xl font-extrabold text-yellow-400 tracking-wide drop-shadow-lg">Top 5 Ranked Tickets</h3>
+          <h3 className="text-2xl font-extrabold text-yellow-400 tracking-wide drop-shadow-lg flex items-center">
+            Top 3 Ranked Tickets
+            {loading && !isInitialLoad && (
+              <span className="ml-2 text-sm text-yellow-300 animate-pulse">🔄</span>
+            )}
+          </h3>
           <button
             onClick={handleRefresh}
-            disabled={loading}
-            className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white px-3 py-2 rounded-lg transition duration-300 flex items-center text-sm"
+            disabled={loading && isInitialLoad}
+            className={`${loading && !isInitialLoad ? 'bg-yellow-600 hover:bg-yellow-700' : 'bg-gray-600 hover:bg-gray-700'} disabled:bg-gray-500 text-white px-2 py-1 rounded text-xs transition duration-300 flex items-center opacity-70 hover:opacity-100`}
+            title="Refresh data (usually not needed - data updates automatically)"
           >
-            {loading ? (
+            {loading && isInitialLoad ? (
               <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-1"></div>
                 Loading...
+              </>
+            ) : loading && !isInitialLoad ? (
+              <>
+                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-1"></div>
+                Refreshing...
               </>
             ) : (
               <>
-                <span className="mr-1">🔄</span>
+                <span className="mr-1 text-xs">🔄</span>
                 Refresh
               </>
             )}
@@ -3286,37 +3322,6 @@ function TopRankedTicketsSection({ currentRound }: { currentRound: number }) {
             </div>
           ))}
         </div>
-        {next2.length > 0 && (
-          <div className="flex flex-col md:flex-row justify-center gap-4 md:gap-6 mt-2">
-            {next2.map((ticket, idx) => (
-              <div
-                key={idx}
-                className="flip-card w-full md:min-w-[200px] md:max-w-[240px] flex-shrink-0 relative"
-                tabIndex={0}
-                style={{ zIndex: 5 - idx }}
-              >
-                <div className="flip-card-outer w-full h-full">
-                                                  <div className="flip-card-inner w-full h-full" style={{ minHeight: 320 }}>
-                  {/* Front */}
-                  <div className="flip-card-front bg-gradient-to-br from-amber-700 to-yellow-400 flex flex-col items-center justify-center p-6 md:p-8 w-full h-full">
-                    <div className="text-4xl md:text-5xl font-extrabold mb-2 md:mb-3 text-amber-900 drop-shadow-[0_2px_8px_rgba(205,127,50,0.7)]">{
-                      idx === 0 ? '4️⃣' : '5️⃣'
-                    }</div>
-                    <div className="text-xl md:text-2xl font-black text-white mb-1 md:mb-2 tracking-wider drop-shadow-md">Ticket #{ticket.ticketNumber}</div>
-                    <div className="text-base md:text-lg font-bold mb-1 uppercase tracking-wide text-amber-900 drop-shadow-[0_2px_8px_rgba(205,127,50,0.7)]">Rank: {ticket.rank}</div>
-                  </div>
-                  {/* Back */}
-                  <div className="flip-card-back bg-gradient-to-br from-black via-blue-900 to-blue-800 flex flex-col items-center justify-center p-6 md:p-8 w-full h-full">
-                    <div className="text-xs font-semibold text-white/80 mb-1 uppercase tracking-widest">Owner</div>
-                    <div className="text-base md:text-lg font-mono text-white bg-blue-900/60 rounded px-2 md:px-3 py-1 md:py-2 mb-2 md:mb-3 break-all text-center shadow-inner">{shorten(ticket.owner)}</div>
-                    <div className="text-base md:text-lg font-bold text-white mb-1 md:mb-2">Prize: {ticket.prize} TRDO</div>
-                  </div>
-                </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
       </div>
     </>
   );
