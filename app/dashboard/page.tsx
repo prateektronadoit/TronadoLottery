@@ -544,19 +544,19 @@ const ConfettiCelebration = ({ onClose, winningTicketInfo }: { onClose?: () => v
     const colors = ['#FFD700', '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#FF8C00', '#FF1493'];
     const emojis = ['🎉', '🎊', '✨', '💫', '🌟', '⭐', '🎈', '🎁', '🏆', '💎'];
     
-    // Reduced number of confetti elements for better performance
-    const fallingConfetti = Array.from({ length: 20 }, (_, i) => ({
+    // Reduced number of confetti elements for better performance on mobile
+    const fallingConfetti = Array.from({ length: 15 }, (_, i) => ({
       id: `falling-${i}`,
       left: `${Math.random() * 100}%`,
       delay: `${Math.random() * 2}s`,
       duration: `${2 + Math.random() * 2}s`,
       color: colors[Math.floor(Math.random() * colors.length)],
-      fontSize: `${12 + Math.random() * 6}px`,
+      fontSize: `${10 + Math.random() * 4}px`,
       rotation: `${Math.random() * 360}deg`,
       emoji: emojis[Math.floor(Math.random() * emojis.length)]
     }));
 
-    const floatingConfetti = Array.from({ length: 12 }, (_, i) => ({
+    const floatingConfetti = Array.from({ length: 8 }, (_, i) => ({
       id: `floating-${i}`,
       left: `${Math.random() * 100}%`,
       top: `${Math.random() * 100}%`,
@@ -573,8 +573,8 @@ const ConfettiCelebration = ({ onClose, winningTicketInfo }: { onClose?: () => v
   }, []); // Empty dependency array - calculate once
 
   return (
-    <div className="relative bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 rounded-2xl p-6 md:p-8 text-center shadow-xl border-4 border-yellow-300" style={{ 
-      boxShadow: '0 0 30px rgba(255, 215, 0, 0.6), 0 0 60px rgba(255, 165, 0, 0.4), 0 0 90px rgba(255, 69, 0, 0.2)'
+    <div className="relative bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 rounded-xl md:rounded-2xl p-4 md:p-6 lg:p-8 text-center shadow-xl border-2 md:border-4 border-yellow-300 mx-2 md:mx-0" style={{ 
+      boxShadow: '0 0 20px rgba(255, 215, 0, 0.6), 0 0 40px rgba(255, 165, 0, 0.4), 0 0 60px rgba(255, 69, 0, 0.2)'
     }}>
       {/* Optimized Falling Confetti Animation */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -617,11 +617,11 @@ const ConfettiCelebration = ({ onClose, winningTicketInfo }: { onClose?: () => v
       </div>
       
       <div className="relative z-10">
-        <div className="text-4xl md:text-5xl mb-3 animate-bounce" style={{ animationDuration: '2s' }}>🎉</div>
-        <h2 className="text-xl md:text-2xl font-bold text-white mb-3 drop-shadow-lg">
+        <div className="text-3xl md:text-4xl lg:text-5xl mb-2 md:mb-3 animate-bounce" style={{ animationDuration: '2s' }}>🎉</div>
+        <h2 className="text-lg md:text-xl lg:text-2xl font-bold text-white mb-2 md:mb-3 drop-shadow-lg">
           CONGRATULATIONS!
         </h2>
-        <p className="text-lg md:text-xl text-white mb-4 font-semibold drop-shadow-md">
+        <p className="text-sm md:text-lg lg:text-xl text-white mb-3 md:mb-4 font-semibold drop-shadow-md leading-tight">
           Your ticket has won prize {winningTicketInfo?.prize ? parseFloat(winningTicketInfo.prize).toFixed(5) : '0.00000'} TRDO! 🏆
         </p>
       </div>
@@ -703,55 +703,55 @@ const PowerPointViewer = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
-      <div className="bg-gray-900 rounded-lg p-6 border border-gray-700">
-        <h2 className="text-2xl font-bold mb-6 text-center text-white flex items-center justify-center">
-          <span className="mr-3">📊</span>
+    <div className="max-w-4xl mx-auto space-y-4 md:space-y-6 px-2 md:px-0">
+      <div className="bg-gray-900 rounded-lg p-3 md:p-6 border border-gray-700">
+        <h2 className="text-lg md:text-2xl font-bold mb-4 md:mb-6 text-center text-white flex items-center justify-center">
+          <span className="mr-2 md:mr-3">📊</span>
           How To Play Lottery (Simplified Lottery)
         </h2>
         
         {/* PowerPoint Slides Container */}
         <div className="relative bg-white rounded-lg shadow-lg overflow-hidden">
           {/* Navigation Controls */}
-          <div className="absolute top-4 left-4 right-4 z-10 flex justify-between items-center">
+          <div className="absolute top-2 md:top-4 left-2 md:left-4 right-2 md:right-4 z-10 flex justify-between items-center">
             <button
               onClick={goToPreviousSlide}
               disabled={currentSlide <= 1}
-              className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-lg transition-colors duration-200 flex items-center shadow-lg"
+              className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-2 md:px-4 py-1 md:py-2 rounded-lg transition-colors duration-200 flex items-center shadow-lg text-xs md:text-sm"
             >
-              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-3 h-3 md:w-5 md:h-5 mr-1 md:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
-              Previous
+              <span className="hidden sm:inline">Previous</span>
             </button>
             
-            <div className="bg-black bg-opacity-50 text-white px-3 py-1 rounded-lg text-sm font-medium">
-              Slide {currentSlide} of {totalSlides}
+            <div className="bg-black bg-opacity-50 text-white px-2 md:px-3 py-1 rounded-lg text-xs md:text-sm font-medium">
+              {currentSlide}/{totalSlides}
             </div>
             
             <button
               onClick={goToNextSlide}
               disabled={currentSlide >= totalSlides}
-              className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-lg transition-colors duration-200 flex items-center shadow-lg"
+              className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-2 md:px-4 py-1 md:py-2 rounded-lg transition-colors duration-200 flex items-center shadow-lg text-xs md:text-sm"
             >
-              Next
-              <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <span className="hidden sm:inline">Next</span>
+              <svg className="w-3 h-3 md:w-5 md:h-5 ml-1 md:ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
             </button>
           </div>
 
           {/* Slides Display */}
-          <div className="w-full h-[600px] sm:h-[700px] md:h-[800px] relative bg-gradient-to-br from-blue-50 to-gray-100">
+          <div className="w-full h-[300px] sm:h-[400px] md:h-[500px] lg:h-[600px] xl:h-[700px] relative bg-gradient-to-br from-blue-50 to-gray-100">
             {loading ? (
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="text-center">
-                  <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                  <p className="text-gray-600 text-lg">Loading presentation...</p>
+                  <div className="animate-spin rounded-full h-8 w-8 md:h-16 md:w-16 border-b-2 border-blue-600 mx-auto mb-2 md:mb-4"></div>
+                  <p className="text-gray-600 text-sm md:text-lg">Loading presentation...</p>
                 </div>
               </div>
             ) : slides.length > 0 ? (
-              <div className="w-full h-full flex items-center justify-center p-4">
+              <div className="w-full h-full flex items-center justify-center p-2 md:p-4">
                 <div className="relative w-full h-full flex items-center justify-center">
                   {/* Current Slide */}
                   <div className="max-w-full max-h-full bg-white rounded-lg shadow-xl overflow-hidden">
@@ -767,12 +767,12 @@ const PowerPointViewer = () => {
                   </div>
                   
                   {/* Slide Navigation Dots */}
-                  <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
+                  <div className="absolute bottom-2 md:bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-1 md:space-x-2">
                     {slides.map((_, index) => (
                       <button
                         key={index}
                         onClick={() => setCurrentSlide(index + 1)}
-                        className={`w-3 h-3 rounded-full transition-colors duration-200 ${
+                        className={`w-2 h-2 md:w-3 md:h-3 rounded-full transition-colors duration-200 ${
                           currentSlide === index + 1 
                             ? 'bg-blue-600' 
                             : 'bg-gray-300 hover:bg-gray-400'
@@ -784,18 +784,18 @@ const PowerPointViewer = () => {
               </div>
             ) : (
               <div className="absolute inset-0 flex items-center justify-center">
-                <div className="text-center">
-                  <div className="text-6xl mb-4">📊</div>
-                  <h3 className="text-xl font-bold text-gray-800 mb-2">Presentation Not Available</h3>
-                  <p className="text-gray-600 mb-4">Please use the download or online viewing options below</p>
+                <div className="text-center px-4">
+                  <div className="text-4xl md:text-6xl mb-2 md:mb-4">📊</div>
+                  <h3 className="text-lg md:text-xl font-bold text-gray-800 mb-1 md:mb-2">Presentation Not Available</h3>
+                  <p className="text-sm md:text-base text-gray-600 mb-3 md:mb-4">Please use the download or online viewing options below</p>
                   
                   {/* Fallback Action Buttons */}
-                  <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                  <div className="flex flex-col sm:flex-row gap-2 md:gap-4 justify-center">
                     <button
                       onClick={handleViewOnline}
-                      className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors duration-200 flex items-center justify-center"
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-4 md:px-6 py-2 md:py-3 rounded-lg transition-colors duration-200 flex items-center justify-center text-sm md:text-base"
                     >
-                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-4 h-4 md:w-5 md:h-5 mr-1 md:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                       </svg>
                       View Online
@@ -803,9 +803,9 @@ const PowerPointViewer = () => {
                     
                     <button
                       onClick={handleDownload}
-                      className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg transition-colors duration-200 flex items-center justify-center"
+                      className="bg-green-600 hover:bg-green-700 text-white px-4 md:px-6 py-2 md:py-3 rounded-lg transition-colors duration-200 flex items-center justify-center text-sm md:text-base"
                     >
-                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-4 h-4 md:w-5 md:h-5 mr-1 md:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                       </svg>
                       Download PPTX
@@ -1018,7 +1018,7 @@ export default function Dashboard() {
       const refId = urlParams.get('refId');
       
       // Set section from URL parameter if valid
-      if (section && ['dashboard', 'registration', 'purchase', 'mytickets', 'claim', 'rankings', 'community', 'how to play lottery'].includes(section)) {
+      if (section && ['dashboard', 'registration', 'purchase', 'mytickets', 'claim', 'rankings', 'community', 'how-to-play'].includes(section)) {
         setActiveSection(section);
       }
       
@@ -2226,6 +2226,12 @@ export default function Dashboard() {
             }
             .animate-fall {
               animation: fall linear infinite;
+            }
+            /* Mobile-specific confetti optimizations */
+            @media (max-width: 768px) {
+              .animate-fall {
+                animation-duration: 3s !important;
+              }
             }
           `}</style>
           <ConfettiCelebration winningTicketInfo={winningTicketInfo} />
@@ -3786,11 +3792,42 @@ function TopRankedTicketsSection({ currentRound }: { currentRound: number }) {
             )}
           </button>
         </div>
-        <div className="flex justify-center items-end gap-2 md:gap-4 lg:gap-6 mb-8 relative">
-          {/* 2nd Place - Left */}
+        {/* Mobile: Vertical Stack, Desktop: Horizontal Podium */}
+        <div className="flex flex-col md:flex-row justify-center items-center gap-4 md:gap-6 lg:gap-8 mb-8 relative">
+          {/* 1st Place - Always First on Mobile, Center on Desktop */}
+          {top3[0] && (
+            <div
+              className="flip-card w-full max-w-[280px] md:max-w-[260px] relative"
+              tabIndex={0}
+              style={{ 
+                zIndex: 10,
+                animation: 'bounce 2s ease-in-out infinite',
+                animationDelay: '0s'
+              }}
+            >
+              <div className="flip-card-outer">
+                <div className="flip-card-inner" style={{ minHeight: '280px', width: '100%' }}>
+                  {/* Front */}
+                  <div className={`flip-card-front bg-gradient-to-br ${rankColors[0]} flex flex-col items-center justify-center p-6 md:p-8 w-full h-full`}>
+                    <div className={`text-4xl md:text-5xl font-extrabold mb-2 md:mb-3 ${rankTextColors[0]} ${rankShadow[0]}`}>🥇</div>
+                    <div className="text-lg md:text-xl font-black text-white mb-1 md:mb-2 tracking-wider drop-shadow-md text-center">Ticket #{top3[0].ticketNumber}</div>
+                    <div className={`text-sm md:text-base font-bold mb-1 uppercase tracking-wide ${rankTextColors[0]} ${rankShadow[0]}`}>Rank: {top3[0].rank}</div>
+                  </div>
+                  {/* Back */}
+                  <div className="flip-card-back bg-gradient-to-br from-black via-blue-900 to-blue-800 flex flex-col items-center justify-center p-6 md:p-8 w-full h-full">
+                    <div className="text-xs font-semibold text-white/80 mb-1 uppercase tracking-widest">Owner</div>
+                    <div className="text-sm md:text-base font-mono text-white bg-blue-900/60 rounded px-2 md:px-3 py-1 md:py-2 mb-2 md:mb-3 break-all text-center shadow-inner">{shorten(top3[0].owner)}</div>
+                    <div className="text-sm md:text-base font-bold text-white mb-2">Prize: {top3[0].prize} TRDO</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 2nd Place - Second on Mobile, Left on Desktop */}
           {top3[1] && (
             <div
-              className="flip-card flex-shrink-0 relative"
+              className="flip-card w-full max-w-[280px] md:max-w-[260px] relative order-2 md:order-1"
               tabIndex={0}
               style={{ 
                 zIndex: 9,
@@ -3799,58 +3836,28 @@ function TopRankedTicketsSection({ currentRound }: { currentRound: number }) {
               }}
             >
               <div className="flip-card-outer">
-                <div className="flip-card-inner" style={{ minHeight: 320, width: '260px' }}>
+                <div className="flip-card-inner" style={{ minHeight: '280px', width: '100%' }}>
                   {/* Front */}
-                  <div className={`flip-card-front bg-gradient-to-br ${rankColors[1]} flex flex-col items-center justify-center p-8 w-full h-full`}>
-                    <div className={`text-5xl font-extrabold mb-3 ${rankTextColors[1]} ${rankShadow[1]}`}>🥈</div>
-                    <div className="text-xl font-black text-white mb-2 tracking-wider drop-shadow-md">Ticket #{top3[1].ticketNumber}</div>
-                    <div className={`text-base font-bold mb-1 uppercase tracking-wide ${rankTextColors[1]} ${rankShadow[1]}`}>Rank: {top3[1].rank}</div>
+                  <div className={`flip-card-front bg-gradient-to-br ${rankColors[1]} flex flex-col items-center justify-center p-6 md:p-8 w-full h-full`}>
+                    <div className={`text-4xl md:text-5xl font-extrabold mb-2 md:mb-3 ${rankTextColors[1]} ${rankShadow[1]}`}>🥈</div>
+                    <div className="text-lg md:text-xl font-black text-white mb-1 md:mb-2 tracking-wider drop-shadow-md text-center">Ticket #{top3[1].ticketNumber}</div>
+                    <div className={`text-sm md:text-base font-bold mb-1 uppercase tracking-wide ${rankTextColors[1]} ${rankShadow[1]}`}>Rank: {top3[1].rank}</div>
                   </div>
                   {/* Back */}
-                  <div className="flip-card-back bg-gradient-to-br from-black via-blue-900 to-blue-800 flex flex-col items-center justify-center p-8 w-full h-full">
+                  <div className="flip-card-back bg-gradient-to-br from-black via-blue-900 to-blue-800 flex flex-col items-center justify-center p-6 md:p-8 w-full h-full">
                     <div className="text-xs font-semibold text-white/80 mb-1 uppercase tracking-widest">Owner</div>
-                    <div className="text-base font-mono text-white bg-blue-900/60 rounded px-3 py-2 mb-3 break-all text-center shadow-inner">{shorten(top3[1].owner)}</div>
-                    <div className="text-base font-bold text-white mb-2">Prize: {top3[1].prize} TRDO</div>
+                    <div className="text-sm md:text-base font-mono text-white bg-blue-900/60 rounded px-2 md:px-3 py-1 md:py-2 mb-2 md:mb-3 break-all text-center shadow-inner">{shorten(top3[1].owner)}</div>
+                    <div className="text-sm md:text-base font-bold text-white mb-2">Prize: {top3[1].prize} TRDO</div>
                   </div>
                 </div>
               </div>
             </div>
           )}
 
-          {/* 1st Place - Center */}
-          {top3[0] && (
-            <div
-              className="flip-card flex-shrink-0 relative"
-                tabIndex={0}
-              style={{ 
-                zIndex: 10,
-                animation: 'bounce 2s ease-in-out infinite',
-                animationDelay: '0s'
-              }}
-            >
-              <div className="flip-card-outer">
-                <div className="flip-card-inner" style={{ minHeight: 320, width: '260px' }}>
-                  {/* Front */}
-                  <div className={`flip-card-front bg-gradient-to-br ${rankColors[0]} flex flex-col items-center justify-center p-8 w-full h-full`}>
-                    <div className={`text-5xl font-extrabold mb-3 ${rankTextColors[0]} ${rankShadow[0]}`}>🥇</div>
-                    <div className="text-xl font-black text-white mb-2 tracking-wider drop-shadow-md">Ticket #{top3[0].ticketNumber}</div>
-                    <div className={`text-base font-bold mb-1 uppercase tracking-wide ${rankTextColors[0]} ${rankShadow[0]}`}>Rank: {top3[0].rank}</div>
-                  </div>
-                  {/* Back */}
-                  <div className="flip-card-back bg-gradient-to-br from-black via-blue-900 to-blue-800 flex flex-col items-center justify-center p-8 w-full h-full">
-                    <div className="text-xs font-semibold text-white/80 mb-1 uppercase tracking-widest">Owner</div>
-                    <div className="text-base font-mono text-white bg-blue-900/60 rounded px-3 py-2 mb-3 break-all text-center shadow-inner">{shorten(top3[0].owner)}</div>
-                    <div className="text-base font-bold text-white mb-2">Prize: {top3[0].prize} TRDO</div>
-                  </div>
-                </div>
-                </div>
-              </div>
-          )}
-
-          {/* 3rd Place - Right */}
+          {/* 3rd Place - Third on Mobile, Right on Desktop */}
           {top3[2] && (
             <div
-              className="flip-card flex-shrink-0 relative"
+              className="flip-card w-full max-w-[280px] md:max-w-[260px] relative order-3 md:order-3"
               tabIndex={0}
               style={{ 
                 zIndex: 8,
@@ -3859,23 +3866,23 @@ function TopRankedTicketsSection({ currentRound }: { currentRound: number }) {
               }}
             >
               <div className="flip-card-outer">
-                <div className="flip-card-inner" style={{ minHeight: 320, width: '260px' }}>
+                <div className="flip-card-inner" style={{ minHeight: '280px', width: '100%' }}>
                   {/* Front */}
-                  <div className={`flip-card-front bg-gradient-to-br ${rankColors[2]} flex flex-col items-center justify-center p-8 w-full h-full`}>
-                    <div className={`text-5xl font-extrabold mb-3 ${rankTextColors[2]} ${rankShadow[2]}`}>🥉</div>
-                    <div className="text-xl font-black text-white mb-2 tracking-wider drop-shadow-md">Ticket #{top3[2].ticketNumber}</div>
-                    <div className={`text-base font-bold mb-1 uppercase tracking-wide ${rankTextColors[2]} ${rankShadow[2]}`}>Rank: {top3[2].rank}</div>
+                  <div className={`flip-card-front bg-gradient-to-br ${rankColors[2]} flex flex-col items-center justify-center p-6 md:p-8 w-full h-full`}>
+                    <div className={`text-4xl md:text-5xl font-extrabold mb-2 md:mb-3 ${rankTextColors[2]} ${rankShadow[2]}`}>🥉</div>
+                    <div className="text-lg md:text-xl font-black text-white mb-1 md:mb-2 tracking-wider drop-shadow-md text-center">Ticket #{top3[2].ticketNumber}</div>
+                    <div className={`text-sm md:text-base font-bold mb-1 uppercase tracking-wide ${rankTextColors[2]} ${rankShadow[2]}`}>Rank: {top3[2].rank}</div>
                   </div>
                   {/* Back */}
-                  <div className="flip-card-back bg-gradient-to-br from-black via-blue-900 to-blue-800 flex flex-col items-center justify-center p-8 w-full h-full">
+                  <div className="flip-card-back bg-gradient-to-br from-black via-blue-900 to-blue-800 flex flex-col items-center justify-center p-6 md:p-8 w-full h-full">
                     <div className="text-xs font-semibold text-white/80 mb-1 uppercase tracking-widest">Owner</div>
-                    <div className="text-base font-mono text-white bg-blue-900/60 rounded px-3 py-2 mb-3 break-all text-center shadow-inner">{shorten(top3[2].owner)}</div>
-                    <div className="text-base font-bold text-white mb-2">Prize: {top3[2].prize} TRDO</div>
+                    <div className="text-sm md:text-base font-mono text-white bg-blue-900/60 rounded px-2 md:px-3 py-1 md:py-2 mb-2 md:mb-3 break-all text-center shadow-inner">{shorten(top3[2].owner)}</div>
+                    <div className="text-sm md:text-base font-bold text-white mb-2">Prize: {top3[2].prize} TRDO</div>
                   </div>
                 </div>
               </div>
-          </div>
-        )}
+            </div>
+          )}
         </div>
       </div>
     </>
