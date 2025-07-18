@@ -3,16 +3,16 @@ import Image from 'next/image';
 import '../styles/fluid-animation.css';
 
 const stats = [
-  {
-    iconImage: '12.png',
-    value: '0',
-    label: 'Tickets Sold',
-  },
-  {
-    iconImage: '11.png',
-    value: '0',
-    label: 'Happy Winners',
-  },
+  // {
+  //   iconImage: '12.png',
+  //   value: '0',
+  //   label: 'Tickets Sold',
+  // },
+  // {
+  //   iconImage: '11.png',
+  //   value: '0',
+  //   label: 'Happy Winners',
+  // },
   {
     iconImage: '10.png',
     value: '0',

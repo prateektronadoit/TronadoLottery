@@ -3828,7 +3828,7 @@ function TopRankedTicketsSection({ currentRound }: { currentRound: number }) {
           {top3[1] && (
             <div
               className="flip-card w-full max-w-[280px] md:max-w-[260px] relative order-2 md:order-1"
-              tabIndex={0}
+                tabIndex={0}
               style={{ 
                 zIndex: 9,
                 animation: 'bounce 2s ease-in-out infinite',
@@ -3850,8 +3850,8 @@ function TopRankedTicketsSection({ currentRound }: { currentRound: number }) {
                     <div className="text-sm md:text-base font-bold text-white mb-2">Prize: {top3[1].prize} TRDO</div>
                   </div>
                 </div>
+                </div>
               </div>
-            </div>
           )}
 
           {/* 3rd Place - Third on Mobile, Right on Desktop */}
@@ -3881,8 +3881,8 @@ function TopRankedTicketsSection({ currentRound }: { currentRound: number }) {
                   </div>
                 </div>
               </div>
-            </div>
-          )}
+          </div>
+        )}
         </div>
       </div>
     </>
