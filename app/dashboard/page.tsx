@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo, useImperativeHandle, forwardRef } from 'react';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useAccount, useReadContract, useWriteContract } from 'wagmi';
 import { useWallet } from '../hooks/useWallet';
@@ -204,15 +204,7 @@ const formatUSDT = (value: string | number): string => {
 };
 
 // Comprehensive Prize Display Component
-const ComprehensivePrizeDisplay = ({ 
-  roundId, 
-  getUserPrizeData, 
-  getUserTotalPrize, 
-  getUserSponsorInfo,
-  setNotification,
-  myTicketsCount,
-  drawExecuted
-}: { 
+const ComprehensivePrizeDisplay = React.memo(forwardRef<{ refreshData: () => void }, { 
   roundId: number;
   getUserPrizeData: (roundId: number) => Promise<any>;
   getUserTotalPrize: (roundId: number) => Promise<string>;
@@ -220,7 +212,15 @@ const ComprehensivePrizeDisplay = ({
   setNotification: (notification: { message: string; type: 'success' | 'error' | 'warning' | 'info' } | null) => void;
   myTicketsCount: number;
   drawExecuted: boolean;
-}) => {
+}>(({ 
+  roundId, 
+  getUserPrizeData, 
+  getUserTotalPrize, 
+  getUserSponsorInfo,
+  setNotification,
+  myTicketsCount,
+  drawExecuted
+}, ref) => {
   const [prizeData, setPrizeData] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -236,6 +236,7 @@ const ComprehensivePrizeDisplay = ({
   // Add ref to track if loading is in progress to prevent multiple simultaneous loads
   const loadingRef = useRef(false);
   const lastLoadTimeRef = useRef(0);
+  const loadedRoundRef = useRef<number | null>(null);
 
   // Fetch user level counts when popup opens (only once per open)
   useEffect(() => {
@@ -285,6 +286,12 @@ const ComprehensivePrizeDisplay = ({
     try {
       await claimPrize(roundId);
       setNotification({ type: 'success', message: 'Prize claimed successfully! 🏆' });
+      
+      // Refresh data after successful claim to get updated contract state
+      console.log('🔄 Refreshing data after successful claim');
+      loadedRoundRef.current = null; // Force reload
+      await loadPrizeData();
+      
       // Immediately re-check claim status after claiming
       await checkClaimStatus();
     } catch (error: any) {
@@ -304,6 +311,10 @@ const ComprehensivePrizeDisplay = ({
     }
   };
 
+  // Store the function in a ref to avoid dependency issues
+  const getUserPrizeDataRef = useRef(getUserPrizeData);
+  getUserPrizeDataRef.current = getUserPrizeData;
+
   // Memoized loadPrizeData function to prevent recreation on every render
   const loadPrizeData = useCallback(async () => {
     if (!roundId || roundId === 0) return;
@@ -321,6 +332,12 @@ const ComprehensivePrizeDisplay = ({
       return;
     }
 
+    // Don't reload if we already have data for this round
+    if (loadedRoundRef.current === roundId && prizeData && !loading) {
+      console.log('🔄 Data already loaded for round', roundId, ', skipping...');
+      return;
+    }
+
     loadingRef.current = true;
     lastLoadTimeRef.current = now;
     
@@ -328,9 +345,12 @@ const ComprehensivePrizeDisplay = ({
     setError(null);
     
     try {
-      console.log('🔄 Loading prize data for round:', roundId);
-      const data = await getUserPrizeData(roundId);
+      const timestamp = new Date().toLocaleTimeString();
+      console.log(`🔄 [${timestamp}] Loading prize data for round:`, roundId);
+      const data = await getUserPrizeDataRef.current(roundId);
+      console.log(`📊 [${timestamp}] Users data fetched:`, data);
       setPrizeData(data);
+      loadedRoundRef.current = roundId; // Mark this round as loaded
     } catch (err: any) {
       console.error('Error loading prize data:', err);
       setError(err.message || 'Failed to load prize data');
@@ -338,12 +358,41 @@ const ComprehensivePrizeDisplay = ({
       setLoading(false);
       loadingRef.current = false;
     }
-  }, [roundId, getUserPrizeData]);
+  }, [roundId]); // Only depend on roundId, not the function
 
-  // Use effect with proper dependencies and debouncing
+  // Smart refresh strategy: Refresh data periodically and after claims
   useEffect(() => {
+    if (roundId && roundId > 0) {
+      loadPrizeData();
+    }
+  }, [roundId]); // Only depend on roundId, not loadPrizeData
+
+  // Periodic refresh every 30 seconds to get fresh contract data
+  useEffect(() => {
+    if (!roundId || roundId === 0) return;
+
+    const interval = setInterval(() => {
+      const timestamp = new Date().toLocaleTimeString();
+      console.log(`🔄 [${timestamp}] Periodic refresh for fresh contract data, round:`, roundId);
+      console.log(`📊 [${timestamp}] Fetching users data every 30 seconds...`);
+      loadedRoundRef.current = null; // Force reload
+      loadPrizeData();
+    }, 30000); // 30 seconds
+
+    return () => clearInterval(interval);
+  }, [roundId, loadPrizeData]);
+
+  // Add a manual refresh function that can be called from parent
+  const refreshData = useCallback(() => {
+    console.log('🔄 Manual refresh requested for round:', roundId);
+    loadedRoundRef.current = null; // Reset the loaded round to force reload
     loadPrizeData();
-  }, [loadPrizeData]);
+  }, [roundId, loadPrizeData]);
+
+  // Expose refresh function to parent via ref
+  useImperativeHandle(ref, () => ({
+    refreshData
+  }), [refreshData]);
 
   if (loading) {
     return (
@@ -521,7 +570,9 @@ const ComprehensivePrizeDisplay = ({
       )}
     </div>
   );
-};
+}));
+
+ComprehensivePrizeDisplay.displayName = 'ComprehensivePrizeDisplay';
 
 // Confetti Celebration Component
 interface ConfettiItem {
@@ -750,6 +801,46 @@ export default function Dashboard() {
     transactionType,
     isRefreshing
   } = useWallet();
+
+  // Ref to call refresh function on ComprehensivePrizeDisplay
+  const prizeDisplayRef = useRef<{ refreshData: () => void }>(null);
+
+  // Monitor currentRound changes and force refresh when it updates
+  useEffect(() => {
+    if (dashboardData.currentRound && dashboardData.currentRound > 0) {
+      console.log('🔄 Current round changed to:', dashboardData.currentRound);
+      // Force refresh the prize display when round changes
+      setTimeout(() => {
+        if (prizeDisplayRef.current) {
+          console.log('🔄 Forcing refresh due to round change');
+          prizeDisplayRef.current.refreshData();
+        }
+      }, 100); // Small delay to ensure component is ready
+    }
+  }, [dashboardData.currentRound]);
+
+  // Memoize functions passed to ComprehensivePrizeDisplay to prevent unnecessary re-renders
+  const memoizedGetUserPrizeData = useCallback(
+    (roundId: number) => getUserPrizeData(roundId),
+    [getUserPrizeData]
+  );
+
+  const memoizedGetUserTotalPrize = useCallback(
+    (roundId: number) => getUserTotalPrize(roundId),
+    [getUserTotalPrize]
+  );
+
+  const memoizedGetUserSponsorInfo = useCallback(
+    (roundId: number) => getUserSponsorInfo(roundId),
+    [getUserSponsorInfo]
+  );
+
+  const memoizedSetNotification = useCallback(
+    (notification: { message: string; type: 'success' | 'error' | 'warning' | 'info' } | null) => {
+      setNotification(notification);
+    },
+    []
+  );
 
   // Add console.log to track dashboardData changes
   useEffect(() => {
@@ -2311,20 +2402,6 @@ export default function Dashboard() {
                         <p className="text-sm md:text-base text-gray-300 mt-1">Collect your lottery winnings</p>
                       </div>
                     </div>
-                    
-                  <button 
-                      className="relative overflow-hidden bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 hover:from-blue-500 hover:via-purple-500 hover:to-blue-500 text-white px-6 md:px-8 py-3 md:py-4 rounded-xl font-bold text-sm md:text-base transition-all duration-300 transform hover:scale-105 hover:shadow-blue-500/30 active:scale-95 group"
-                    onClick={() => {
-                      refreshDrawStatus();
-                    }}
-                  >
-                      {/* Button shine effect */}
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
-                      <span className="relative z-10 flex items-center">
-                        <span className="mr-2 text-lg">🎲</span>
-                    Check Draw Status
-                      </span>
-                  </button>
                   </div>
                 </div>
               </div>
@@ -2435,31 +2512,51 @@ export default function Dashboard() {
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full hover:translate-x-full transition-transform duration-1000"></div>
                     
                     <div className="relative z-10">
-                      <div className="flex items-center gap-3 mb-6">
-                        <div className="text-2xl md:text-3xl">💰</div>
-                        <div>
-                          <h3 className="text-xl md:text-2xl lg:text-3xl font-black text-transparent bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 bg-clip-text">
-                      Prize Breakdown & Sponsor Income
-                    </h3>
-                          <p className="text-sm md:text-base text-gray-300 mt-1">Detailed analysis of your earnings</p>
+                      <div className="flex items-center justify-between mb-6">
+                        <div className="flex items-center gap-3">
+                          <div className="text-2xl md:text-3xl">💰</div>
+                          <div>
+                            <h3 className="text-xl md:text-2xl lg:text-3xl font-black text-transparent bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 bg-clip-text">
+                              Prize Breakdown & Sponsor Income
+                            </h3>
+                            <p className="text-sm md:text-base text-gray-300 mt-1">Detailed analysis of your earnings</p>
+                          </div>
                         </div>
+                        <button
+                          onClick={() => prizeDisplayRef.current?.refreshData()}
+                          className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg transition duration-300 flex items-center text-sm"
+                          title="Refresh data from contract"
+                        >
+                          <span className="mr-1">🔄</span>
+                          Refresh
+                        </button>
                       </div>
                     
                     {/* Current Round Prize Data */}
                       <div className="mb-6">
                         <div className="inline-flex items-center px-4 py-2 rounded-full bg-blue-500/20 text-blue-300 border border-blue-400/30 text-sm md:text-base font-semibold mb-4">
                           <span className="mr-2">🎯</span>
-                        Round #{dashboardData.currentRound} - Current Round
+                          Round #{dashboardData.currentRound} - Current Round
+                          {console.log('🔍 Dashboard currentRound:', dashboardData.currentRound, 'Type:', typeof dashboardData.currentRound)}
                         </div>
-                      <ComprehensivePrizeDisplay 
-                        roundId={dashboardData.currentRound}
-                        getUserPrizeData={getUserPrizeData}
-                        getUserTotalPrize={getUserTotalPrize}
-                        getUserSponsorInfo={getUserSponsorInfo}
-                        setNotification={setNotification}
-                        myTicketsCount={dashboardData.myTicketsCount || 0}
-                        drawExecuted={dashboardData.drawExecuted || false}
-                      />
+                      {dashboardData.currentRound && dashboardData.currentRound > 0 ? (
+                        <ComprehensivePrizeDisplay 
+                          key={`round-${dashboardData.currentRound}`}
+                          ref={prizeDisplayRef}
+                          roundId={dashboardData.currentRound}
+                          getUserPrizeData={memoizedGetUserPrizeData}
+                          getUserTotalPrize={memoizedGetUserTotalPrize}
+                          getUserSponsorInfo={memoizedGetUserSponsorInfo}
+                          setNotification={memoizedSetNotification}
+                          myTicketsCount={dashboardData.myTicketsCount || 0}
+                          drawExecuted={dashboardData.drawExecuted || false}
+                        />
+                      ) : (
+                        <div className="bg-gray-900 rounded-lg p-4 text-center">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
+                          <p className="text-sm text-gray-400">Loading current round data...</p>
+                        </div>
+                      )}
                     </div>
                         </div>
                       </div>
